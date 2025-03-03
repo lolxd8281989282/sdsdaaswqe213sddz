@@ -1,4 +1,3 @@
--- Check for existing UI and remove it
 if game:GetService("CoreGui"):FindFirstChild("DraculaUI") then
     game:GetService("CoreGui"):FindFirstChild("DraculaUI"):Destroy()
 end
