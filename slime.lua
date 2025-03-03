@@ -185,10 +185,10 @@ local function updateESP()
         return 
     end
 
-    local closestPlayer = nil
-    local closestDistance = math.huge
-
-    -- Find closest player
+    -- Create a table to store the 3 closest players
+    local closestPlayers = {}
+    
+    -- Find closest players
     for _, otherPlayer in pairs(game.Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character then
             local otherHRP = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -196,46 +196,72 @@ local function updateESP()
 
             if otherHRP and myHRP then
                 local distance = (myHRP.Position - otherHRP.Position).Magnitude
-
-                if distance < closestDistance then
-                    closestDistance = distance
-                    closestPlayer = otherPlayer
-                end
+                
+                -- Add to closest players table
+                table.insert(closestPlayers, {
+                    player = otherPlayer,
+                    distance = distance
+                })
             end
         end
     end
-
-    if closestPlayer then
-        local otherHRP = closestPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local staminaValue = closestPlayer:FindFirstChild("Values") and closestPlayer.Values:FindFirstChild("Stamina")
-        local guardingValue = closestPlayer:FindFirstChild("Values") and closestPlayer.Values:FindFirstChild("Guarding")
-
-        if otherHRP and staminaValue then
-            -- Convert world position to screen position with adjusted height for above head
-            local headPosition = otherHRP.Position + Vector3.new(0, 2.5, 0)
-            local screenPosition, onScreen = camera:WorldToViewportPoint(headPosition)
-
-            if onScreen then
-                espLabel.Visible = true
-                espLabel.Position = UDim2.new(0, screenPosition.X - 100, 0, screenPosition.Y - 25)
-
+    
+    -- Sort players by distance
+    table.sort(closestPlayers, function(a, b)
+        return a.distance < b.distance
+    end)
+    
+    -- Take only the top 3 closest players
+    if #closestPlayers > 0 then
+        -- Create or update ESP labels for the closest 3 players
+        local espText = ""
+        
+        -- Only process up to 3 players
+        for i = 1, math.min(3, #closestPlayers) do
+            local playerData = closestPlayers[i]
+            local otherPlayer = playerData.player
+            local distance = playerData.distance
+            
+            local otherHRP = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local staminaValue = otherPlayer:FindFirstChild("Values") and otherPlayer.Values:FindFirstChild("Stamina")
+            local guardingValue = otherPlayer:FindFirstChild("Values") and otherPlayer.Values:FindFirstChild("Guarding")
+            
+            if otherHRP and staminaValue then
                 -- Determine if guarding is TRUE or FALSE based on distance
-                local isGuarding = guardingValue and guardingValue.Value and (closestDistance <= GUARDING_DISTANCE)
-
-                espLabel.Text = string.format("Player: %s\nStamina: %.2f\nGuarding: %s", 
-                    closestPlayer.Name, 
+                local isGuarding = guardingValue and guardingValue.Value and (distance <= GUARDING_DISTANCE)
+                
+                -- Add this player's info to the ESP text
+                if i > 1 then
+                    espText = espText .. "\n\n"
+                end
+                
+                espText = espText .. string.format("Player: %s\nStamina: %.2f\nGuarding: %s", 
+                    otherPlayer.Name, 
                     staminaValue.Value, 
                     isGuarding and "true" or "false"
                 )
-
-                -- Change color based on guarding distance
-                if isGuarding then
-                    espLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red if guarding AND close
-                else
-                    espLabel.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green otherwise
+            end
+        end
+        
+        -- Only show ESP if we have data
+        if espText ~= "" then
+            espLabel.Visible = true
+            espLabel.Text = espText
+            
+            -- Position the ESP label in a fixed position on screen
+            espLabel.Position = UDim2.new(0, 10, 0, 10)
+            espLabel.Size = UDim2.new(0, 200, 0, 150) -- Increased size for multiple players
+            
+            -- Default color (will be overridden if first player is guarding)
+            espLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            
+            -- If the closest player is guarding, make the text red
+            if closestPlayers[1] and closestPlayers[1].distance <= GUARDING_DISTANCE then
+                local closestPlayer = closestPlayers[1].player
+                local guardingValue = closestPlayer:FindFirstChild("Values") and closestPlayer.Values:FindFirstChild("Guarding")
+                if guardingValue and guardingValue.Value then
+                    espLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
                 end
-            else
-                espLabel.Visible = false
             end
         else
             espLabel.Visible = false
