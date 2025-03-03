@@ -13,11 +13,11 @@ local GUARDING_DISTANCE = 12 -- Adjust this value for guarding range
 local COLORS = {
     background = Color3.fromRGB(20, 20, 20),
     backgroundTransparency = 0.1,
-    accent = Color3.fromRGB(255, 255, 255), - title
+    accent = Color3.fromRGB(255, 255, 255), -- title
     text = Color3.fromRGB(255, 255, 255),
     textDim = Color3.fromRGB(150, 150, 150),
     toggle = Color3.fromRGB(30, 30, 30),
-    toggleEnabled = Color3.fromRGB(128, 128, 128) - toggle
+    toggleEnabled = Color3.fromRGB(128, 128, 128) -- toggle
 }
 
 -- Create ScreenGui
