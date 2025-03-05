@@ -93,12 +93,12 @@ getgenv().loaded = true
 
     local themes = {
         preset = {
-            accent = rgb(195,33,72),
+            accent = rgb(140, 20, 35),
             outline = rgb(10, 10, 10),
             inline = rgb(30, 30, 30),
             text = rgb(180, 180, 180),
             text_outline = rgb(0, 0, 0),
-            glow = rgb(195,33,72), -- ignore
+            glow = rgb(140, 20, 35), -- ignore
             background = rgb(20, 20, 20)
         }, 	
 
