@@ -2927,44 +2927,69 @@ local sliderr = a:slider({name = "Armor"})
 local toggle = a:toggle({name = "Knocked"})
 
 -- main TAB
-local aimbot = window:tab({name = "main"})
+-- main TAB
+local main = window:tab({name = "main"})
 
--- Aimbot Section
-local aimbot_section = aimbot:section({name = "Aimbot"})
-local aimbot_toggle = aimbot_section:toggle({name = "Enable Aimbot", flag = "aimbot_enabled", callback = function(bool)
-    print("Aimbot enabled:", bool)
-end})
+-- silent aim section
+local silent_aim = main:section({name = "silent aim"})
+local silent_enabled = silent_aim:toggle({name = "enabled", flag = "silent_enabled"})
+silent_aim:toggle({name = "show fov", flag = "show_fov"})
+silent_aim:dropdown({name = "closest part", flag = "silent_closest_part", items = {"head", "torso", "random"}, default = "head"})
+silent_aim:toggle({name = "match y axis", flag = "match_y_axis"})
+silent_aim:slider({name = "radius", min = 0, max = 2000, default = 1000, suffix = "px", flag = "silent_radius"})
+silent_aim:slider({name = "hit chance", min = 0, max = 100, default = 100, suffix = "%", flag = "silent_hitchance"})
 
-aimbot_section:dropdown({name = "Target Type", flag = "aimbot_target_type", items = {"Head", "Torso", "Feet", "Random"}, default = "Head"})
-aimbot_section:slider({name = "FOV", min = 1, max = 1000, default = 100, interval = 1, suffix = "px", flag = "aimbot_fov"})
-aimbot_section:slider({name = "Lock Time", min = 0, max = 10, default = 2, interval = 0.1, suffix = "s", flag = "aimbot_lock_time"})
-aimbot_section:colorpicker({name = "Target Reticle Color", color = Color3.fromRGB(255, 0, 0), flag = "aimbot_reticle_color"})
+-- aimbot section
+local aimbot = main:section({name = "aimbot"})
+local aimbot_enabled = aimbot:toggle({name = "enabled", flag = "aimbot_enabled"})
+aimbot:toggle({name = "show fov", flag = "aimbot_show_fov"})
+aimbot:dropdown({name = "closest part", flag = "aimbot_closest_part", items = {"head", "torso", "random"}, default = "head"})
+aimbot:toggle({name = "match y axis", flag = "aimbot_match_y_axis"})
+aimbot:slider({name = "radius", min = 0, max = 2000, default = 100, suffix = "px", flag = "aimbot_radius"})
+aimbot:slider({name = "smoothing", min = 0, max = 100, default = 5, suffix = "%", flag = "aimbot_smoothing"})
 
--- Silent Aim Section
-local silent_aim_section = aimbot:section({name = "Silent Aim"})
-local silent_aim_toggle = silent_aim_section:toggle({name = "Enable Silent Aim", flag = "silent_aim_enabled"})
-silent_aim_section:slider({name = "Accuracy", min = 0, max = 100, default = 80, interval = 1, suffix = "%", flag = "silent_aim_accuracy"})
-silent_aim_section:slider({name = "Lock Speed", min = 0, max = 10, default = 2, interval = 0.1, suffix = "s", flag = "silent_aim_lock_speed"})
+-- targeting section
+local targeting = main:section({name = "targeting", side = "right"})
+targeting:toggle({name = "sticky aim", flag = "sticky_aim"})
+targeting:toggle({name = "visible only", flag = "visible_only"})
+targeting:toggle({name = "allow knocked", flag = "allow_knocked"})
+targeting:toggle({name = "ignore crew/team", flag = "ignore_team"})
+targeting:slider({name = "hit distance", min = 0, max = 1000, default = 350, suffix = "", flag = "hit_distance"})
 
--- Aimbot Smoothness Section
-local smoothness_section = aimbot:section({name = "Aimbot Smoothness", side = "right"})
-smoothness_section:slider({name = "Smoothness", min = 1, max = 100, default = 20, interval = 1, suffix = "%", flag = "aimbot_smoothness"})
-smoothness_section:colorpicker({name = "Smoothness Reticle Color", color = Color3.fromRGB(0, 255, 0), flag = "smoothness_reticle_color"})
+targeting:dropdown({name = "target part", flag = "target_part", items = {"head", "torso", "random"}, default = "head"})
+targeting:dropdown({name = "closest part blacklist", flag = "part_blacklist", items = {"none", "head", "torso", "arms", "legs"}, default = "none"})
 
--- Auto Fire Section
-local auto_fire_section = aimbot:section({name = "Auto Fire", side = "right"})
-auto_fire_section:toggle({name = "Enable Auto Fire", flag = "auto_fire_enabled"})
+-- target strafe section
+local strafe = targeting:toggle({name = "target strafe", flag = "target_strafe"})
+strafe:slider({name = "speed", min = 0, max = 100, default = 1, suffix = "", flag = "strafe_speed"})
+strafe:slider({name = "offset", min = 0, max = 100, default = 1, suffix = "", flag = "strafe_offset"})
 
--- Triggerbot Section
-local triggerbot_section = aimbot:section({name = "Triggerbot", side = "right"})
-local triggerbot_toggle = triggerbot_section:toggle({name = "Enable Triggerbot", flag = "triggerbot_enabled"})
-triggerbot_section:slider({name = "Trigger Delay", min = 0, max = 1000, default = 100, interval = 10, suffix = "ms", flag = "triggerbot_delay"})
-triggerbot_section:slider({name = "Trigger Distance", min = 0, max = 1000, default = 100, interval = 10, suffix = "studs", flag = "triggerbot_distance"})
+-- exploits section
+local exploits = main:section({name = "exploits", side = "right"})
+exploits:toggle({name = "magic bullet", flag = "magic_bullet"})
+exploits:toggle({name = "delete target on kill", flag = "delete_target"})
+exploits:toggle({name = "hidden bullets", flag = "hidden_bullets"})
+exploits:slider({name = "firerate", min = 0, max = 100, default = 5, suffix = "%", flag = "firerate_multiplier"})
 
--- Advanced Aim Settings
-local advanced_aim_section = aimbot:section({name = "Advanced Settings", side = "right"})
-advanced_aim_section:slider({name = "Aim Speed", min = 1, max = 100, default = 50, interval = 1, suffix = "%", flag = "aim_speed"})
-advanced_aim_section:slider({name = "Maximum Distance", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "aimbot_max_distance"})
+-- aug section
+local aug = exploits:toggle({name = "aug", flag = "aug_enabled"})
+aug:toggle({name = "aug aura", flag = "aug_aura"})
+aug:slider({name = "cooldown percent", min = 0, max = 100, default = 100, suffix = "%", flag = "aug_cooldown"})
+
+-- gun section
+local gun = exploits:toggle({name = "gun", flag = "gun_mods"})
+gun:toggle({name = "no shoot animation", flag = "no_shoot_anim"})
+gun:toggle({name = "full auto", flag = "full_auto"})
+gun:toggle({name = "auto reload", flag = "auto_reload"})
+gun:slider({name = "recoil percent", min = 0, max = 100, default = 0, suffix = "%", flag = "recoil_percent"})
+
+-- keybinds
+silent_enabled:keybind({key = Enum.KeyCode.E, mode = "Toggle", flag = "silent_key"})
+aimbot_enabled:keybind({key = Enum.KeyCode.Q, mode = "Toggle", flag = "aimbot_key"})
+
+-- colors
+silent_aim:colorpicker({name = "fov color", color = Color3.fromRGB(255, 0, 255), flag = "silent_fov_color"})
+aimbot:colorpicker({name = "fov color", color = Color3.fromRGB(255, 0, 255), flag = "aimbot_fov_color"})
 
 -- VISUALS TAB
 local visuals = window:tab({name = "visuals"})
