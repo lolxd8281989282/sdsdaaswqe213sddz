@@ -2916,12 +2916,12 @@ getgenv().loaded = true
 
 -- documentation 
     local window = library:window({
-        name = "Sigmawarehax",
+        name = "                          dracula.lol",
     })
 
     local a = library:target_indicator()
-    a:label({name = "Name: kxerna (niggerskid123)"})
-    a:label({name = "Nigger", value = "500"})
+    a:label({name = "Name: beta (test)"})
+    a:label({name = "test", value = "500"})
     local slider = a:slider({name = "Health"})
     local sliderr = a:slider({name = "Armor"})
     local toggle = a:toggle({name = "Knocked"})
