@@ -2935,7 +2935,7 @@ local silent_enabled = silent_aim:toggle({name = "enabled", flag = "silent_enabl
     print("Silent aim enabled:", bool)
 end})
 -- Properly configure keybind to show in keybind list
-silent_enabled:keybind({key = Enum.KeyCode.R, mode = "Toggle", flag = "silent_key", name = "Silent Aim"})
+silent_enabled:keybind({key = Enum.KeyCode.R, mode = " (toggle)", flag = "silent_key", name = "Silent Aim"})
 
 silent_aim:toggle({name = "show fov", flag = "show_fov"})
 silent_aim:dropdown({name = "closest part", flag = "silent_closest_part", items = {"head", "torso", "random"}, default = "head"})
@@ -2963,7 +2963,7 @@ targeting:toggle({name = "target strafe", flag = "target_strafe"})
 -- aimbot section (top right)
 local aimbot = main:section({name = "aimbot", side = "right"})
 local aimbot_enabled = aimbot:toggle({name = "enabled", flag = "aimbot_enabled", callback = function(bool)
-    print("Aimbot enabled:", bool)
+    print("aimbot enabled:", bool)
 end})
 -- Properly configure keybind to show in keybind list
 aimbot_enabled:keybind({key = Enum.KeyCode.Q, mode = "Toggle", flag = "aimbot_key", name = "Aimbot"})
