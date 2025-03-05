@@ -93,12 +93,12 @@ getgenv().loaded = true
 
     local themes = {
         preset = {
-            accent = rgb(140, 20, 35),
+            accent = rgb(195,33,72),
             outline = rgb(10, 10, 10),
             inline = rgb(30, 30, 30),
             text = rgb(180, 180, 180),
             text_outline = rgb(0, 0, 0),
-            glow = rgb(140, 20, 35), -- ignore
+            glow = rgb(195,33,72), -- ignore
             background = rgb(20, 20, 20)
         }, 	
 
@@ -2915,130 +2915,250 @@ getgenv().loaded = true
 -- 
 
 -- documentation 
-    local window = library:window({
-        name = "                                 dracula.lol [beta]",
-    })
+local window = library:window({
+    name = "                                 dracula.lol [beta]",
+})
 
-    local a = library:target_indicator()
-    a:label({name = "Name: beta (test)"})
-    a:label({name = "test", value = "500"})
-    local slider = a:slider({name = "Health"})
-    local sliderr = a:slider({name = "Armor"})
-    local toggle = a:toggle({name = "Knocked"})
+local a = library:target_indicator()
+a:label({name = "Name: beta (test)"})
+a:label({name = "test", value = "500"})
+local slider = a:slider({name = "Health"})
+local sliderr = a:slider({name = "Armor"})
+local toggle = a:toggle({name = "Knocked"})
 
-    -- local aaa = false;
-    -- task.spawn(function()
-    --     while true do 
-    --         slider.set(math.random(1, 100))
-    --         sliderr.set(math.random(1,200))
-    --         aaa = not aaa 
-    --         toggle.set(aaa)
-    --         task.wait(0.05)
-    --     end
-    -- end)
+-- AIMBOT TAB
+local aimbot = window:tab({name = "Aimbot"})
 
-    local aimbot = window:tab({name = "Aimbot"})
-    local section = aimbot:section({name = "Selection"})
+-- Aimbot Section
+local aimbot_section = aimbot:section({name = "Aimbot"})
+local aimbot_toggle = aimbot_section:toggle({name = "Enable Aimbot", flag = "aimbot_enabled", callback = function(bool)
+    print("Aimbot enabled:", bool)
+end})
 
-    local toggle = section:toggle({name = "This is an example toggle.", folding = true})
-    toggle:slider({name = "This is an example slider.", min = 0, max = 100, default = 100, interval = 1, suffix = "°", flag = "abc"})
-    toggle:dropdown({name = "This is an example dropdown.", flag = "distance_priority", items = {"Mouse", "Distance"}, default = "Mouse"})
-    toggle:textbox({name = "This is an example textbox.", })
-    toggle:button({name = "This is a button.", callback = function() print("clicked!") end})
-    toggle:colorpicker({name = "I am a colorpicker", color = Color3.fromRGB(255, 255, 0), alpha = 1})
-    toggle:keybind({name = "hi"})
-    local visuals = window:tab({name = "Visuals"})
+aimbot_section:dropdown({name = "Target Type", flag = "aimbot_target_type", items = {"Head", "Torso", "Feet", "Random"}, default = "Head"})
+aimbot_section:slider({name = "FOV", min = 1, max = 1000, default = 100, interval = 1, suffix = "px", flag = "aimbot_fov"})
+aimbot_section:slider({name = "Lock Time", min = 0, max = 10, default = 2, interval = 0.1, suffix = "s", flag = "aimbot_lock_time"})
+aimbot_section:colorpicker({name = "Target Reticle Color", color = Color3.fromRGB(255, 0, 0), flag = "aimbot_reticle_color"})
 
-    local section = visuals:section({name = "Selection"})
+-- Silent Aim Section
+local silent_aim_section = aimbot:section({name = "Silent Aim"})
+local silent_aim_toggle = silent_aim_section:toggle({name = "Enable Silent Aim", flag = "silent_aim_enabled"})
+silent_aim_section:slider({name = "Accuracy", min = 0, max = 100, default = 80, interval = 1, suffix = "%", flag = "silent_aim_accuracy"})
+silent_aim_section:slider({name = "Lock Speed", min = 0, max = 10, default = 2, interval = 0.1, suffix = "s", flag = "silent_aim_lock_speed"})
 
-    local toggle = section:toggle({name = "This is an example toggle.", folding = true, flag = "toggle_flag", callback = function(bool)
-        print(bool, flags["toggle_flag"])
-    end})
-    toggle:slider({name = "This is an example slider.", min = 0, max = 100, default = 100, interval = 1, suffix = "°", flag = "slider_flag", callback = function(int)
-        print(int, flags["slider_flag"])
-    end})
-    toggle:dropdown({name = "This is an example dropdown.", items = {"Mouse", "Distance"}, default = "Mouse", flag = "slider_flag", callback = function(int)
-        print(int, flags["slider_flag"])
-    end})
-    toggle:textbox({name = "This is an example textbox.", })
-    toggle:button({name = "This is a button."})
-    toggle:colorpicker({name = "I am a colorpicker", color = Color3.fromRGB(255, 255, 0), alpha = 1})
+-- Aimbot Smoothness Section
+local smoothness_section = aimbot:section({name = "Aimbot Smoothness", side = "right"})
+smoothness_section:slider({name = "Smoothness", min = 1, max = 100, default = 20, interval = 1, suffix = "%", flag = "aimbot_smoothness"})
+smoothness_section:colorpicker({name = "Smoothness Reticle Color", color = Color3.fromRGB(0, 255, 0), flag = "smoothness_reticle_color"})
 
-    local settings = window:tab({name = "Settings"})
+-- Auto Fire Section
+local auto_fire_section = aimbot:section({name = "Auto Fire", side = "right"})
+auto_fire_section:toggle({name = "Enable Auto Fire", flag = "auto_fire_enabled"})
 
-    local section = visuals:section({name = "Configs", side = "left"})
-    config_holder = section:dropdown({name = "Configs", flag = "config_name_list"}) library:update_config_list() 
-    section:textbox({name = "Config name", flag = "config_name_text_box"})
+-- Triggerbot Section
+local triggerbot_section = aimbot:section({name = "Triggerbot", side = "right"})
+local triggerbot_toggle = triggerbot_section:toggle({name = "Enable Triggerbot", flag = "triggerbot_enabled"})
+triggerbot_section:slider({name = "Trigger Delay", min = 0, max = 1000, default = 100, interval = 10, suffix = "ms", flag = "triggerbot_delay"})
+triggerbot_section:slider({name = "Trigger Distance", min = 0, max = 1000, default = 100, interval = 10, suffix = "studs", flag = "triggerbot_distance"})
 
-    section:button({name = "Create", callback = function()
-        if flags["config_name_text_box"] == "" then 
-            return 
-        end 
+-- Advanced Aim Settings
+local advanced_aim_section = aimbot:section({name = "Advanced Settings", side = "right"})
+advanced_aim_section:slider({name = "Aim Speed", min = 1, max = 100, default = 50, interval = 1, suffix = "%", flag = "aim_speed"})
+advanced_aim_section:slider({name = "Maximum Distance", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "aimbot_max_distance"})
 
-        writefile(library.directory .. "/configs/" .. flags["config_name_text_box"] .. ".cfg", library:get_config())
+-- VISUALS TAB
+local visuals = window:tab({name = "Visuals"})
 
-        library:update_config_list()
-    end})
+-- Box ESP Section
+local box_esp_section = visuals:section({name = "Box ESP"})
+local box_esp_toggle = box_esp_section:toggle({name = "Enable Box ESP", flag = "box_esp_enabled"})
+box_esp_section:dropdown({name = "Box Style", flag = "box_style", items = {"2D", "Full 3D", "Skeleton Box"}, default = "2D"})
+box_esp_section:slider({name = "Box Thickness", min = 1, max = 10, default = 2, interval = 0.1, suffix = "px", flag = "box_thickness"})
+box_esp_section:colorpicker({name = "Box Color", color = Color3.fromRGB(255, 255, 255), flag = "box_color"})
 
-    section:button({name = "Delete", callback = function()
-        delfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg")
-        library:update_config_list()
-    end})
+-- Health Bar ESP Section
+local health_bar_section = visuals:section({name = "Health Bar ESP"})
+local health_bar_toggle = health_bar_section:toggle({name = "Enable Health Bar ESP", flag = "health_bar_enabled"})
+health_bar_section:slider({name = "Health Bar Thickness", min = 1, max = 10, default = 2, interval = 0.1, suffix = "px", flag = "health_bar_thickness"})
+health_bar_section:slider({name = "Health Bar Width", min = 1, max = 10, default = 3, interval = 0.1, suffix = "px", flag = "health_bar_width"})
+health_bar_section:colorpicker({name = "Health Gradient Color", color = Color3.fromRGB(0, 255, 0), flag = "health_bar_color"})
 
-    section:button({name = "Load", callback = function()
-        library:load_config(readfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg"))
-    end})
+-- Armor Bar ESP Section
+local armor_bar_section = visuals:section({name = "Armor Bar ESP"})
+local armor_bar_toggle = armor_bar_section:toggle({name = "Enable Armor Bar ESP", flag = "armor_bar_enabled"})
+armor_bar_section:slider({name = "Armor Bar Thickness", min = 1, max = 10, default = 2, interval = 0.1, suffix = "px", flag = "armor_bar_thickness"})
+armor_bar_section:colorpicker({name = "Armor Bar Color", color = Color3.fromRGB(0, 0, 255), flag = "armor_bar_color"})
 
-    section:button({name = "Save", callback = function()
-        writefile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg", library:get_config())
-        library:update_config_list()
-    end})
+-- Skeleton ESP Section
+local skeleton_esp_section = visuals:section({name = "Skeleton ESP", side = "right"})
+local skeleton_esp_toggle = skeleton_esp_section:toggle({name = "Enable Skeleton ESP", flag = "skeleton_esp_enabled"})
+skeleton_esp_section:slider({name = "Line Thickness", min = 0.1, max = 5, default = 1, interval = 0.1, suffix = "px", flag = "skeleton_thickness"})
+skeleton_esp_section:colorpicker({name = "Skeleton Line Color", color = Color3.fromRGB(255, 255, 255), flag = "skeleton_color"})
+skeleton_esp_section:dropdown({name = "Bones to Display", flag = "bones_display", items = {"All", "Head", "Torso", "Arms", "Legs"}, default = "All"})
 
-    section:button({name = "Refresh configs", callback = function()
-        library:update_config_list()
-    end}); library:update_config_list()
+-- Name ESP Section
+local name_esp_section = visuals:section({name = "Name ESP", side = "right"})
+local name_esp_toggle = name_esp_section:toggle({name = "Enable Name ESP", flag = "name_esp_enabled"})
+name_esp_section:slider({name = "Font Size", min = 8, max = 24, default = 12, interval = 1, suffix = "px", flag = "name_font_size"})
+name_esp_section:dropdown({name = "Font Type", flag = "name_font_type", items = {"Default", "Monospace", "Bold", "Italic"}, default = "Default"})
+name_esp_section:colorpicker({name = "Name Color", color = Color3.fromRGB(255, 255, 255), flag = "name_color"})
 
-    local old_config;
+-- Distance ESP Section
+local distance_esp_section = visuals:section({name = "Distance ESP", side = "right"})
+local distance_esp_toggle = distance_esp_section:toggle({name = "Enable Distance ESP", flag = "distance_esp_enabled"})
+distance_esp_section:slider({name = "Distance Limit", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "distance_limit"})
+distance_esp_section:colorpicker({name = "Distance Text Color", color = Color3.fromRGB(255, 255, 255), flag = "distance_text_color"})
 
-    section:button({name = "Unload Config", callback = function()
-        library:load_config(old_config)
-    end})
+-- Player Filtering Section
+local player_filtering_section = visuals:section({name = "Player Filtering", side = "right"})
+player_filtering_section:dropdown({name = "Show ESP For", flag = "esp_filter", items = {"All", "Teammates", "Enemies", "NPCs"}, default = "All"})
+player_filtering_section:slider({name = "Maximum Visible Range", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "esp_max_range"})
 
-    section:button({name = "Unload Menu", callback = function()
-        library:unload_menu()
-    end})
+-- RAGE TAB
+local rage = window:tab({name = "Rage"})
 
-    local section = visuals:section({name = "Configs", side = "right"})
-    section:colorpicker({name = "Accent", color = themes.preset.accent, flag = "accent", callback = function(color, alpha)
-        library:update_theme("accent", color)
-    end})
-    section:colorpicker({name = "Background", color = themes.preset.background, flag = "background", callback = function(color)
-        library:update_theme("background", color)
-    end})
-    section:colorpicker({name = "Inline", color = themes.preset.inline, callback = function(color, alpha)
-        library:update_theme("inline", color)
-    end})
-    section:colorpicker({name = "Outline", color = themes.preset.outline, callback = function(color, alpha)
-        library:update_theme("outline", color)
-    end})
-    section:colorpicker({name = "Text", color = themes.preset.text, callback = function(color, alpha)
-        library:update_theme("text", color)
-    end})
-    section:colorpicker({name = "Text Outline", color = themes.preset.text_outline, callback = function(color, alpha)
-        library:update_theme("text_outline", color)
-    end})
-    section:colorpicker({name = "Glow", color = themes.preset.glow, callback = function(color, alpha)
-        library:update_theme("glow", color)
-    end})
-    section:toggle({name = "Keybind list", flag = "keybind_list", callback = function(bool)
-        library.keybind_list.Visible = bool 
-    end})
-    section:toggle({name = "Target Indicator", flag = "target_indicator", callback = function(bool)
-        library.target_indicator.Visible = bool 
-    end})
-    section:label({name = "UI bind"}):keybind({key = Enum.KeyCode.Insert, default = true ,flag = "UI_Bind", callback = function(bool)
-        library.gui.Enabled = bool 
-    end})
+-- No Recoil Section
+local no_recoil_section = rage:section({name = "No Recoil"})
+local no_recoil_toggle = no_recoil_section:toggle({name = "Enable No Recoil", flag = "no_recoil_enabled"})
+no_recoil_section:slider({name = "Recoil Reduction", min = 0, max = 100, default = 100, interval = 1, suffix = "%", flag = "recoil_reduction"})
 
-    old_config = library:get_config()
+-- No Spread Section
+local no_spread_section = rage:section({name = "No Spread"})
+local no_spread_toggle = no_spread_section:toggle({name = "Enable No Spread", flag = "no_spread_enabled"})
+no_spread_section:slider({name = "Spread Reduction", min = 0, max = 100, default = 100, interval = 1, suffix = "%", flag = "spread_reduction"})
+
+-- Rapid Fire Section
+local rapid_fire_section = rage:section({name = "Rapid Fire"})
+local rapid_fire_toggle = rapid_fire_section:toggle({name = "Enable Rapid Fire", flag = "rapid_fire_enabled"})
+rapid_fire_section:slider({name = "Fire Rate Speed", min = 100, max = 1000, default = 500, interval = 10, suffix = "%", flag = "fire_rate_speed"})
+
+-- Wallbang Section
+local wallbang_section = rage:section({name = "Wallbang", side = "right"})
+local wallbang_toggle = wallbang_section:toggle({name = "Enable Wallbang", flag = "wallbang_enabled"})
+wallbang_section:slider({name = "Wall Penetration Distance", min = 1, max = 100, default = 10, interval = 1, suffix = "studs", flag = "wall_penetration"})
+
+-- Instant Hit Section
+local instant_hit_section = rage:section({name = "Instant Hit", side = "right"})
+local instant_hit_toggle = instant_hit_section:toggle({name = "Enable Instant Hit", flag = "instant_hit_enabled"})
+instant_hit_section:slider({name = "Instant Hit Time", min = 0, max = 1000, default = 0, interval = 10, suffix = "ms", flag = "instant_hit_time"})
+
+-- Hit Scan Section
+local hit_scan_section = rage:section({name = "Hit Scan", side = "right"})
+hit_scan_section:toggle({name = "Enable Hit Scan", flag = "hit_scan_enabled"})
+
+-- Fake Lag Section
+local fake_lag_section = rage:section({name = "Fake Lag", side = "right"})
+local fake_lag_toggle = fake_lag_section:toggle({name = "Enable Fake Lag", flag = "fake_lag_enabled"})
+fake_lag_section:slider({name = "Fake Lag Intensity", min = 0, max = 1000, default = 200, interval = 10, suffix = "ms", flag = "fake_lag_intensity"})
+
+-- Anti Aim Section
+local anti_aim_section = rage:section({name = "Anti Aim", side = "right"})
+local anti_aim_toggle = anti_aim_section:toggle({name = "Enable Anti Aim", flag = "anti_aim_enabled"})
+anti_aim_section:slider({name = "Anti Aim Angle", min = 0, max = 360, default = 180, interval = 1, suffix = "°", flag = "anti_aim_angle"})
+
+-- MISCELLANEOUS TAB
+local misc = window:tab({name = "Miscellaneous"})
+
+-- Visual Enhancements Section
+local visual_enhancements_section = misc:section({name = "Visual Enhancements"})
+visual_enhancements_section:toggle({name = "No Fog", flag = "no_fog_enabled"})
+visual_enhancements_section:toggle({name = "No Flashbang", flag = "no_flashbang_enabled"})
+
+-- Weapon Enhancements Section
+local weapon_enhancements_section = misc:section({name = "Weapon Enhancements"})
+weapon_enhancements_section:toggle({name = "Auto Reload", flag = "auto_reload_enabled"})
+local fast_reload_toggle = weapon_enhancements_section:toggle({name = "Fast Reload", flag = "fast_reload_enabled"})
+weapon_enhancements_section:slider({name = "Reload Speed Multiplier", min = 1, max = 10, default = 2, interval = 0.1, suffix = "x", flag = "reload_speed_multiplier"})
+
+-- Utility Section
+local utility_section = misc:section({name = "Utility", side = "right"})
+utility_section:toggle({name = "Anti-Chat Filter", flag = "anti_chat_filter_enabled"})
+utility_section:button({name = "Teleport to Player", callback = function()
+    print("Teleport to player functionality would go here")
+end})
+
+-- SETTINGS TAB
+local settings = window:tab({name = "Settings"})
+
+-- Configs Section
+local configs_section = settings:section({name = "Configs", side = "left"})
+config_holder = configs_section:dropdown({name = "Configs", flag = "config_name_list"}) 
+library:update_config_list() 
+configs_section:textbox({name = "Config name", flag = "config_name_text_box"})
+
+configs_section:button({name = "Create", callback = function()
+    if flags["config_name_text_box"] == "" then 
+        return 
+    end 
+
+    writefile(library.directory .. "/configs/" .. flags["config_name_text_box"] .. ".cfg", library:get_config())
+
+    library:update_config_list()
+end})
+
+configs_section:button({name = "Delete", callback = function()
+    delfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg")
+    library:update_config_list()
+end})
+
+configs_section:button({name = "Load", callback = function()
+    library:load_config(readfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg"))
+end})
+
+configs_section:button({name = "Save", callback = function()
+    writefile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg", library:get_config())
+    library:update_config_list()
+end})
+
+configs_section:button({name = "Refresh configs", callback = function()
+    library:update_config_list()
+end})
+
+local old_config;
+
+configs_section:button({name = "Unload Config", callback = function()
+    library:load_config(old_config)
+end})
+
+configs_section:button({name = "Unload Menu", callback = function()
+    library:unload_menu()
+end})
+
+-- Theme Section
+local theme_section = settings:section({name = "Theme", side = "right"})
+theme_section:colorpicker({name = "Accent", color = themes.preset.accent, flag = "accent", callback = function(color, alpha)
+    library:update_theme("accent", color)
+end})
+theme_section:colorpicker({name = "Background", color = themes.preset.background, flag = "background", callback = function(color)
+    library:update_theme("background", color)
+end})
+theme_section:colorpicker({name = "Inline", color = themes.preset.inline, callback = function(color, alpha)
+    library:update_theme("inline", color)
+end})
+theme_section:colorpicker({name = "Outline", color = themes.preset.outline, callback = function(color, alpha)
+    library:update_theme("outline", color)
+end})
+theme_section:colorpicker({name = "Text", color = themes.preset.text, callback = function(color, alpha)
+    library:update_theme("text", color)
+end})
+theme_section:colorpicker({name = "Text Outline", color = themes.preset.text_outline, callback = function(color, alpha)
+    library:update_theme("text_outline", color)
+end})
+theme_section:colorpicker({name = "Glow", color = themes.preset.glow, callback = function(color, alpha)
+    library:update_theme("glow", color)
+end})
+
+-- UI Settings Section
+local ui_settings_section = settings:section({name = "UI Settings", side = "right"})
+ui_settings_section:toggle({name = "Keybind list", flag = "keybind_list", callback = function(bool)
+    library.keybind_list.Visible = bool 
+end})
+ui_settings_section:toggle({name = "Target Indicator", flag = "target_indicator", callback = function(bool)
+    library.target_indicator.Visible = bool 
+end})
+ui_settings_section:label({name = "UI bind"}):keybind({key = Enum.KeyCode.Insert, default = true, flag = "UI_Bind", callback = function(bool)
+    library.gui.Enabled = bool 
+end})
+
+old_config = library:get_config()
 -- 
