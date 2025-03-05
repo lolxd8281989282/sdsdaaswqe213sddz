@@ -2916,7 +2916,7 @@ getgenv().loaded = true
 
 -- documentation 
     local window = library:window({
-        name = "                                                dracula.lol [beta]",
+        name = "                        dracula.lol [beta]",
     })
 
     local a = library:target_indicator()
