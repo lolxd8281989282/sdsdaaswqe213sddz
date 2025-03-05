@@ -2915,7 +2915,7 @@ getgenv().loaded = true
 -- 
 
 -- documentation 
-local window = library:window({
+    local window = library:window({
     name = "                                 dracula.lol [beta]",
 })
 
@@ -2926,8 +2926,8 @@ local slider = a:slider({name = "Health"})
 local sliderr = a:slider({name = "Armor"})
 local toggle = a:toggle({name = "Knocked"})
 
--- AIMBOT TAB
-local aimbot = window:tab({name = "Aimbot"})
+-- main TAB
+local aimbot = window:tab({name = "main"})
 
 -- Aimbot Section
 local aimbot_section = aimbot:section({name = "Aimbot"})
@@ -2967,7 +2967,7 @@ advanced_aim_section:slider({name = "Aim Speed", min = 1, max = 100, default = 5
 advanced_aim_section:slider({name = "Maximum Distance", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "aimbot_max_distance"})
 
 -- VISUALS TAB
-local visuals = window:tab({name = "Visuals"})
+local visuals = window:tab({name = "visuals"})
 
 -- Box ESP Section
 local box_esp_section = visuals:section({name = "Box ESP"})
@@ -3014,8 +3014,8 @@ local player_filtering_section = visuals:section({name = "Player Filtering", sid
 player_filtering_section:dropdown({name = "Show ESP For", flag = "esp_filter", items = {"All", "Teammates", "Enemies", "NPCs"}, default = "All"})
 player_filtering_section:slider({name = "Maximum Visible Range", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "esp_max_range"})
 
--- RAGE TAB
-local rage = window:tab({name = "Rage"})
+-- CHARACTER TAB
+local rage = window:tab({name = "character"})
 
 -- No Recoil Section
 local no_recoil_section = rage:section({name = "No Recoil"})
@@ -3057,7 +3057,7 @@ local anti_aim_toggle = anti_aim_section:toggle({name = "Enable Anti Aim", flag 
 anti_aim_section:slider({name = "Anti Aim Angle", min = 0, max = 360, default = 180, interval = 1, suffix = "°", flag = "anti_aim_angle"})
 
 -- MISCELLANEOUS TAB
-local misc = window:tab({name = "Miscellaneous"})
+local misc = window:tab({name = "misc"})
 
 -- Visual Enhancements Section
 local visual_enhancements_section = misc:section({name = "Visual Enhancements"})
@@ -3078,7 +3078,7 @@ utility_section:button({name = "Teleport to Player", callback = function()
 end})
 
 -- SETTINGS TAB
-local settings = window:tab({name = "Settings"})
+local settings = window:tab({name = "settings"})
 
 -- Configs Section
 local configs_section = settings:section({name = "Configs", side = "left"})
