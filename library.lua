@@ -2929,50 +2929,63 @@ local toggle = a:toggle({name = "Knocked"})
 -- main TAB
 local main = window:tab({name = "main"})
 
--- silent aim section (left side)
+-- silent aim section (top left)
 local silent_aim = main:section({name = "silent aim"})
-local silent_enabled = silent_aim:toggle({name = "enabled", flag = "silent_enabled"})
-silent_enabled:keybind({key = Enum.KeyCode.R, flag = "silent_key"})
+local silent_enabled = silent_aim:toggle({name = "enabled", flag = "silent_enabled", callback = function(bool)
+    print("Silent aim enabled:", bool)
+end})
+-- Properly configure keybind to show in keybind list
+silent_enabled:keybind({key = Enum.KeyCode.R, mode = "Toggle", flag = "silent_key", name = "Silent Aim"})
+
 silent_aim:toggle({name = "show fov", flag = "show_fov"})
 silent_aim:dropdown({name = "closest part", flag = "silent_closest_part", items = {"head", "torso", "random"}, default = "head"})
 silent_aim:toggle({name = "match y axis", flag = "match_y_axis"})
 silent_aim:slider({name = "radius", min = 0, max = 2000, default = 1000, suffix = "px", flag = "silent_radius"})
 silent_aim:slider({name = "hit chance", min = 0, max = 100, default = 100, suffix = "%", flag = "silent_hitchance"})
-silent_aim:colorpicker({name = "fov color", color = Color3.fromRGB(255, 0, 255), flag = "silent_fov_color"})
+silent_aim:colorpicker({name = "fov color", color = Color3.fromRGB(255, 255, 255), flag = "silent_fov_color"})
 
--- aimbot section (under silent aim)
-local aimbot = main:section({name = "aimbot"})
-local aimbot_enabled = aimbot:toggle({name = "enabled", flag = "aimbot_enabled"})
-aimbot_enabled:keybind({key = Enum.KeyCode.Q, flag = "aimbot_key"})
-aimbot:toggle({name = "show fov", flag = "show_fov"})
-aimbot:dropdown({name = "closest part", flag = "aimbot_closest_part", items = {"head", "torso", "random"}, default = "head"})
-aimbot:toggle({name = "match y axis", flag = "aimbot_match_y_axis"})
-aimbot:slider({name = "radius", min = 0, max = 2000, default = 100, suffix = "px", flag = "aimbot_radius"})
-aimbot:slider({name = "smoothing", min = 0, max = 100, default = 5, suffix = "%", flag = "aimbot_smoothing"})
-aimbot:colorpicker({name = "fov color", color = Color3.fromRGB(255, 0, 255), flag = "aimbot_fov_color"})
+-- targeting section (under silent aim on left)
+local targeting = main:section({name = "targeting"})
+local sticky_aim = targeting:toggle({name = "sticky aim", flag = "sticky_aim", callback = function(bool)
+    print("Sticky aim enabled:", bool)
+end})
+-- Properly configure keybind to show in keybind list
+sticky_aim:keybind({key = Enum.KeyCode.F, mode = "Toggle", flag = "sticky_key", name = "Sticky Aim"})
 
--- targeting section (right side)
-local targeting = main:section({name = "targeting", side = "right"})
-local sticky_aim = targeting:toggle({name = "sticky aim", flag = "sticky_aim"})
-sticky_aim:keybind({key = Enum.KeyCode.F, flag = "sticky_key"})
 targeting:toggle({name = "visible only", flag = "visible_only"})
 targeting:toggle({name = "allow knocked", flag = "allow_knocked"})
 targeting:toggle({name = "ignore crew/team", flag = "ignore_team"})
 targeting:slider({name = "hit distance", min = 0, max = 1000, default = 350, flag = "hit_distance"})
 targeting:dropdown({name = "target part", flag = "target_part", items = {"head", "torso", "random"}, default = "head"})
 targeting:dropdown({name = "closest part blacklist", flag = "part_blacklist", items = {"none", "head", "torso", "arms", "legs"}, default = "none"})
-
--- target strafe subsection
 targeting:toggle({name = "target strafe", flag = "target_strafe"})
 
--- exploits section (under targeting)
+-- aimbot section (top right)
+local aimbot = main:section({name = "aimbot", side = "right"})
+local aimbot_enabled = aimbot:toggle({name = "enabled", flag = "aimbot_enabled", callback = function(bool)
+    print("Aimbot enabled:", bool)
+end})
+-- Properly configure keybind to show in keybind list
+aimbot_enabled:keybind({key = Enum.KeyCode.Q, mode = "Toggle", flag = "aimbot_key", name = "Aimbot"})
+
+aimbot:toggle({name = "show fov", flag = "show_fov"})
+aimbot:dropdown({name = "closest part", flag = "aimbot_closest_part", items = {"head", "torso", "random"}, default = "head"})
+aimbot:toggle({name = "match y axis", flag = "aimbot_match_y_axis"})
+aimbot:slider({name = "radius", min = 0, max = 2000, default = 100, suffix = "px", flag = "aimbot_radius"})
+aimbot:slider({name = "smoothing", min = 0, max = 100, default = 5, suffix = "%", flag = "aimbot_smoothing"})
+aimbot:colorpicker({name = "fov color", color = Color3.fromRGB(255, 255, 255), flag = "aimbot_fov_color"})
+
+-- exploits section (under aimbot on right)
 local exploits = main:section({name = "exploits", side = "right"})
-exploits:toggle({name = "magic bullet", flag = "magic_bullet"})
+local magic_bullet = exploits:toggle({name = "magic bullet", flag = "magic_bullet", callback = function(bool)
+    print("Magic bullet enabled:", bool)
+end})
+-- Add keybind to magic bullet as well
+magic_bullet:keybind({key = Enum.KeyCode.M, mode = "Toggle", flag = "magic_bullet_key", name = "Magic Bullet"})
+
 exploits:toggle({name = "delete target on kill", flag = "delete_target"})
 exploits:toggle({name = "hidden bullets", flag = "hidden_bullets"})
 exploits:slider({name = "firerate", min = 0, max = 100, default = 5, suffix = "%", flag = "firerate_multiplier"})
-
--- subsections
 exploits:toggle({name = "aug", flag = "aug_enabled"})
 exploits:toggle({name = "gun", flag = "gun_enabled"})
 
