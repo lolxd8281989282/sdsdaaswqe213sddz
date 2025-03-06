@@ -93,12 +93,12 @@ getgenv().loaded = true
 
     local themes = {
         preset = {
-            accent = rgb(195,33,72),
+            accent = rgb(165, 183, 165),
             outline = rgb(10, 10, 10),
             inline = rgb(30, 30, 30),
             text = rgb(180, 180, 180),
             text_outline = rgb(0, 0, 0),
-            glow = rgb(195,33,72), -- ignore
+            glow = rgb(165, 183, 165), -- ignore
             background = rgb(20, 20, 20)
         }, 	
 
@@ -2915,8 +2915,8 @@ getgenv().loaded = true
 -- 
 
 -- documentation 
-    local window = library:window({
-    name = "                                 dracula.lol [beta]",
+local window = library:window({
+    name = "                                dracula.lol [beta]",
 })
 
 local a = library:target_indicator()
@@ -2932,13 +2932,13 @@ local main = window:tab({name = "main"})
 -- silent aim section (top left)
 local silent_aim = main:section({name = "silent aim"})
 local silent_enabled = silent_aim:toggle({name = "enabled", flag = "silent_enabled", callback = function(bool)
-    print("Silent aim enabled:", bool)
+    -- Print removed
 end})
 -- Properly configure keybind to show in keybind list
 silent_enabled:keybind({key = Enum.KeyCode.R, mode = "Toggle", flag = "silent_key", name = "Silent Aim"})
 
 silent_aim:toggle({name = "show fov", flag = "show_fov"})
-silent_aim:dropdown({name = "closest part", flag = "silent_closest_part", items = {"head", "torso", "random"}, default = "head"})
+silent_aim:dropdown({name = "closest part", flag = "silent_closest_part", items = {"head", "neck", "torso", "random"}, default = "head"})
 silent_aim:toggle({name = "match y axis", flag = "match_y_axis"})
 silent_aim:slider({name = "radius", min = 0, max = 2000, default = 1000, suffix = "px", flag = "silent_radius"})
 silent_aim:slider({name = "hit chance", min = 0, max = 100, default = 100, suffix = "%", flag = "silent_hitchance"})
@@ -2947,7 +2947,7 @@ silent_aim:colorpicker({name = "fov color", color = Color3.fromRGB(255, 255, 255
 -- targeting section (under silent aim on left)
 local targeting = main:section({name = "targeting"})
 local sticky_aim = targeting:toggle({name = "sticky aim", flag = "sticky_aim", callback = function(bool)
-    print("Sticky aim enabled:", bool)
+    -- Print removed
 end})
 -- Properly configure keybind to show in keybind list
 sticky_aim:keybind({key = Enum.KeyCode.F, mode = "Toggle", flag = "sticky_key", name = "Sticky Aim"})
@@ -2956,20 +2956,20 @@ targeting:toggle({name = "visible only", flag = "visible_only"})
 targeting:toggle({name = "allow knocked", flag = "allow_knocked"})
 targeting:toggle({name = "ignore crew/team", flag = "ignore_team"})
 targeting:slider({name = "hit distance", min = 0, max = 1000, default = 350, flag = "hit_distance"})
-targeting:dropdown({name = "target part", flag = "target_part", items = {"head", "torso", "random"}, default = "head"})
+targeting:dropdown({name = "target part", flag = "target_part", items = {"head", "neck", "torso", "random"}, default = "head"})
 targeting:dropdown({name = "closest part blacklist", flag = "part_blacklist", items = {"none", "head", "torso", "arms", "legs"}, default = "none"})
 targeting:toggle({name = "target strafe", flag = "target_strafe"})
 
 -- aimbot section (top right)
 local aimbot = main:section({name = "aimbot", side = "right"})
 local aimbot_enabled = aimbot:toggle({name = "enabled", flag = "aimbot_enabled", callback = function(bool)
-    print("Aimbot enabled:", bool)
+    -- Print removed
 end})
 -- Properly configure keybind to show in keybind list
 aimbot_enabled:keybind({key = Enum.KeyCode.Q, mode = "Toggle", flag = "aimbot_key", name = "Aimbot"})
 
 aimbot:toggle({name = "show fov", flag = "show_fov"})
-aimbot:dropdown({name = "closest part", flag = "aimbot_closest_part", items = {"head", "torso", "random"}, default = "head"})
+aimbot:dropdown({name = "closest part", flag = "aimbot_closest_part", items = {"head", "neck", "torso", "random"}, default = "head"})
 aimbot:toggle({name = "match y axis", flag = "aimbot_match_y_axis"})
 aimbot:slider({name = "radius", min = 0, max = 2000, default = 100, suffix = "px", flag = "aimbot_radius"})
 aimbot:slider({name = "smoothing", min = 0, max = 100, default = 5, suffix = "%", flag = "aimbot_smoothing"})
@@ -2978,7 +2978,7 @@ aimbot:colorpicker({name = "fov color", color = Color3.fromRGB(255, 255, 255), f
 -- exploits section (under aimbot on right)
 local exploits = main:section({name = "exploits", side = "right"})
 local magic_bullet = exploits:toggle({name = "magic bullet", flag = "magic_bullet", callback = function(bool)
-    print("Magic bullet enabled:", bool)
+    -- Print removed
 end})
 -- Add keybind to magic bullet as well
 magic_bullet:keybind({key = Enum.KeyCode.M, mode = "Toggle", flag = "magic_bullet_key", name = "Magic Bullet"})
@@ -2989,115 +2989,184 @@ exploits:slider({name = "firerate", min = 0, max = 100, default = 5, suffix = "%
 exploits:toggle({name = "aug", flag = "aug_enabled"})
 exploits:toggle({name = "gun", flag = "gun_enabled"})
 
--- VISUALS TAB
+-- visuals tab
 local visuals = window:tab({name = "visuals"})
 
--- Box ESP Section
-local box_esp_section = visuals:section({name = "Box ESP"})
-local box_esp_toggle = box_esp_section:toggle({name = "Enable Box ESP", flag = "box_esp_enabled"})
-box_esp_section:dropdown({name = "Box Style", flag = "box_style", items = {"2D", "Full 3D", "Skeleton Box"}, default = "2D"})
-box_esp_section:slider({name = "Box Thickness", min = 1, max = 10, default = 2, interval = 0.1, suffix = "px", flag = "box_thickness"})
-box_esp_section:colorpicker({name = "Box Color", color = Color3.fromRGB(255, 255, 255), flag = "box_color"})
+-- esp section (left side)
+local esp = visuals:section({name = "esp"})
+esp:toggle({name = "box", flag = "esp_box"}):colorpicker({name = "Box Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_box_color"})
+esp:toggle({name = "name", flag = "esp_name"}):colorpicker({name = "Name Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_name_color"})
+esp:dropdown({name = "name type", flag = "name_type", items = {"name", "display", "custom"}, default = "name"})
+esp:toggle({name = "weapon", flag = "esp_weapon"}):colorpicker({name = "Weapon Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_weapon_color"})
+esp:toggle({name = "distance", flag = "esp_distance"}):colorpicker({name = "Distance Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_distance_color"})
+esp:toggle({name = "healthbar", flag = "esp_healthbar"})
+esp:toggle({name = "armor", flag = "esp_armor"}):colorpicker({name = "Armor Color", color = Color3.fromRGB(0, 170, 255), flag = "esp_armor_color"})
+esp:toggle({name = "armored only", flag = "esp_armored_only"})
+esp:toggle({name = "resize outline", flag = "esp_resize_outline"})
+esp:toggle({name = "moving healthbar", flag = "esp_moving_healthbar"})
 
--- Health Bar ESP Section
-local health_bar_section = visuals:section({name = "Health Bar ESP"})
-local health_bar_toggle = health_bar_section:toggle({name = "Enable Health Bar ESP", flag = "health_bar_enabled"})
-health_bar_section:slider({name = "Health Bar Thickness", min = 1, max = 10, default = 2, interval = 0.1, suffix = "px", flag = "health_bar_thickness"})
-health_bar_section:slider({name = "Health Bar Width", min = 1, max = 10, default = 3, interval = 0.1, suffix = "px", flag = "health_bar_width"})
-health_bar_section:colorpicker({name = "Health Gradient Color", color = Color3.fromRGB(0, 255, 0), flag = "health_bar_color"})
+local healthbar_type = esp:dropdown({name = "healthbar type", flag = "healthbar_type", items = {"gradient"}, default = "gradient"})
+esp:slider({name = "slices", min = 1, max = 10, default = 1, flag = "healthbar_slices"})
+esp:slider({name = "speed", min = 1, max = 10, default = 1, flag = "healthbar_speed"})
+esp:slider({name = "health lerp", min = 0, max = 1, default = 0.05, interval = 0.01, flag = "health_lerp"})
+esp:colorpicker({name = "Healthbar Low", color = Color3.fromRGB(255, 0, 0), flag = "healthbar_low_color"})
+esp:colorpicker({name = "Healthbar Medium", color = Color3.fromRGB(255, 255, 0), flag = "healthbar_medium_color"})
+esp:colorpicker({name = "Healthbar High", color = Color3.fromRGB(0, 255, 0), flag = "healthbar_high_color"})
 
--- Armor Bar ESP Section
-local armor_bar_section = visuals:section({name = "Armor Bar ESP"})
-local armor_bar_toggle = armor_bar_section:toggle({name = "Enable Armor Bar ESP", flag = "armor_bar_enabled"})
-armor_bar_section:slider({name = "Armor Bar Thickness", min = 1, max = 10, default = 2, interval = 0.1, suffix = "px", flag = "armor_bar_thickness"})
-armor_bar_section:colorpicker({name = "Armor Bar Color", color = Color3.fromRGB(0, 0, 255), flag = "armor_bar_color"})
+-- override tracer section
+local override = visuals:section({name = "override tracer"})
+override:toggle({name = "disable tracers", flag = "disable_tracers"})
+override:dropdown({name = "disable value", flag = "disable_value", items = {"local"}, default = "local"})
+override:toggle({name = "selected tracer", flag = "selected_tracer"})
+override:dropdown({name = "tracer", flag = "tracer_type", items = {"random"}, default = "random"})
 
--- Skeleton ESP Section
-local skeleton_esp_section = visuals:section({name = "Skeleton ESP", side = "right"})
-local skeleton_esp_toggle = skeleton_esp_section:toggle({name = "Enable Skeleton ESP", flag = "skeleton_esp_enabled"})
-skeleton_esp_section:slider({name = "Line Thickness", min = 0.1, max = 5, default = 1, interval = 0.1, suffix = "px", flag = "skeleton_thickness"})
-skeleton_esp_section:colorpicker({name = "Skeleton Line Color", color = Color3.fromRGB(255, 255, 255), flag = "skeleton_color"})
-skeleton_esp_section:dropdown({name = "Bones to Display", flag = "bones_display", items = {"All", "Head", "Torso", "Arms", "Legs"}, default = "All"})
+-- notify section
+local notify = visuals:section({name = "notify"})
+notify:toggle({name = "hit", flag = "notify_hit"}):colorpicker({name = "Notify Color", color = Color3.fromRGB(255, 255, 255), flag = "notify_color"})
+notify:slider({name = "notify duration", min = 0, max = 5, default = 1, suffix = "s", flag = "notify_duration"})
+notify:dropdown({name = "random notify text", flag = "notify_text", items = {"-<dmg> hp // <name>"}, default = "-<dmg> hp // <name>"})
+notify:textbox({name = "add custom text", flag = "custom_notify_text", default = "-<dmg> hp // <name>"})
 
--- Name ESP Section
-local name_esp_section = visuals:section({name = "Name ESP", side = "right"})
-local name_esp_toggle = name_esp_section:toggle({name = "Enable Name ESP", flag = "name_esp_enabled"})
-name_esp_section:slider({name = "Font Size", min = 8, max = 24, default = 12, interval = 1, suffix = "px", flag = "name_font_size"})
-name_esp_section:dropdown({name = "Font Type", flag = "name_font_type", items = {"Default", "Monospace", "Bold", "Italic"}, default = "Default"})
-name_esp_section:colorpicker({name = "Name Color", color = Color3.fromRGB(255, 255, 255), flag = "name_color"})
+-- lighting section
+local lighting = visuals:section({name = "lighting"})
+lighting:toggle({name = "ambient", flag = "lighting_ambient"}):colorpicker({name = "Ambient Color", color = Color3.fromRGB(255, 255, 255), flag = "ambient_color"})
+lighting:toggle({name = "colorshift_bottom", flag = "colorshift_bottom"}):colorpicker({name = "ColorShift Bottom", color = Color3.fromRGB(255, 255, 255), flag = "colorshift_bottom_color"})
+lighting:toggle({name = "colorshift_top", flag = "colorshift_top"}):colorpicker({name = "ColorShift Top", color = Color3.fromRGB(255, 255, 255), flag = "colorshift_top_color"})
+lighting:toggle({name = "fogcolor", flag = "fog_color"}):colorpicker({name = "Fog Color", color = Color3.fromRGB(255, 255, 255), flag = "fogcolor_color"})
+lighting:toggle({name = "fogend", flag = "fog_end"})
+lighting:slider({name = "fogend", min = 0, max = 2000, default = 1000, suffix = "studs", flag = "fog_end_distance"})
+lighting:slider({name = "fogstart", min = 0, max = 100, default = 30, suffix = "studs", flag = "fog_start_distance"})
+lighting:toggle({name = "exposurecompensation", flag = "exposure_compensation"})
+lighting:slider({name = "exposurecompensation", min = 0, max = 10, default = 0, flag = "exposure_value"})
+lighting:slider({name = "brightness", min = 0, max = 100, default = 10, flag = "brightness"})
+lighting:toggle({name = "clocktime", flag = "clock_time"})
+lighting:slider({name = "clocktime", min = 0, max = 24, default = 0, suffix = "h", flag = "time_value"})
+lighting:toggle({name = "globalshadows", flag = "global_shadows"})
+lighting:dropdown({name = "technology", flag = "shadow_tech", items = {"shadowmap"}, default = "shadowmap"})
 
--- Distance ESP Section
-local distance_esp_section = visuals:section({name = "Distance ESP", side = "right"})
-local distance_esp_toggle = distance_esp_section:toggle({name = "Enable Distance ESP", flag = "distance_esp_enabled"})
-distance_esp_section:slider({name = "Distance Limit", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "distance_limit"})
-distance_esp_section:colorpicker({name = "Distance Text Color", color = Color3.fromRGB(255, 255, 255), flag = "distance_text_color"})
+-- desync visualizer section (right side)
+local desync = visuals:section({name = "desync visualizer", side = "right"})
+desync:toggle({name = "enabled", flag = "desync_enabled"}):colorpicker({name = "Desync Color", color = Color3.fromRGB(255, 255, 255), flag = "desync_color"})
+desync:toggle({name = "copy animations", flag = "copy_animations"})
+desync:dropdown({name = "material", flag = "desync_material", items = {"neon", "outline"}, default = "neon"})
 
--- Player Filtering Section
-local player_filtering_section = visuals:section({name = "Player Filtering", side = "right"})
-player_filtering_section:dropdown({name = "Show ESP For", flag = "esp_filter", items = {"All", "Teammates", "Enemies", "NPCs"}, default = "All"})
-player_filtering_section:slider({name = "Maximum Visible Range", min = 10, max = 10000, default = 1000, interval = 10, suffix = "studs", flag = "esp_max_range"})
+-- camera section
+local camera = visuals:section({name = "camera", side = "right"})
+camera:slider({name = "ratio x", min = 0, max = 2, default = 1, flag = "ratio_x"})
+camera:slider({name = "ratio y", min = 0, max = 2, default = 1, flag = "ratio_y"})
+
+-- bullet tracers section
+local bullet_tracers = visuals:section({name = "bullet tracers", side = "right"})
+bullet_tracers:toggle({name = "enabled", flag = "tracers_enabled"}):colorpicker({name = "Tracer Color", color = Color3.fromRGB(255, 255, 255), flag = "tracer_color"})
+bullet_tracers:dropdown({name = "texture", flag = "tracer_texture", items = {"trail"}, default = "trail"})
+bullet_tracers:slider({name = "width", min = 1, max = 10, default = 1, flag = "tracer_width"})
+bullet_tracers:slider({name = "speed", min = 1, max = 10, default = 3, flag = "tracer_speed"})
+
+-- target section
+local target = visuals:section({name = "target", side = "right"})
+target:toggle({name = "tracer", flag = "target_tracer"}):colorpicker({name = "Target Tracer Color", color = Color3.fromRGB(255, 255, 255), flag = "target_tracer_color"})
+target:toggle({name = "highlight", flag = "target_highlight"}):colorpicker({name = "Target Highlight Color", color = Color3.fromRGB(255, 255, 255), flag = "target_highlight_color"})
+target:dropdown({name = "culling mode", flag = "culling_mode", items = {"alwaysontop"}, default = "alwaysontop"})
+
+-- hit effects section
+local hit_effects = visuals:section({name = "hit effects", side = "right"})
+hit_effects:toggle({name = "enabled", flag = "effects_enabled"}):colorpicker({name = "Effect Color", color = Color3.fromRGB(255, 255, 255), flag = "effect_color"})
+hit_effects:toggle({name = "weld to player", flag = "weld_effects"})
+hit_effects:dropdown({name = "effects selected", flag = "selected_effects", items = {"zap, fortnite damage"}, default = "zap, fortnite damage"})
+
+-- hit sounds section
+local hit_sounds = visuals:section({name = "hit sounds", side = "right"})
+hit_sounds:toggle({name = "enabled", flag = "sounds_enabled"})
+hit_sounds:toggle({name = "remove hit sound", flag = "remove_hit_sound"})
+hit_sounds:slider({name = "volume", min = 0, max = 1, default = 0.5, interval = 0.1, suffix = "s", flag = "sound_volume"})
+hit_sounds:dropdown({name = "sound", flag = "hit_sound", items = {"minecraft"}, default = "minecraft"})
+
+-- shoot section
+local shoot = visuals:section({name = "shoot", side = "right"})
+shoot:toggle({name = "disable shoot sound", flag = "disable_shoot"})
+shoot:dropdown({name = "disable type", flag = "shoot_disable_type", items = {"local"}, default = "local"})
 
 -- CHARACTER TAB
-local rage = window:tab({name = "character"})
+local character = window:tab({name = "character"})
 
--- No Recoil Section
-local no_recoil_section = rage:section({name = "No Recoil"})
-local no_recoil_toggle = no_recoil_section:toggle({name = "Enable No Recoil", flag = "no_recoil_enabled"})
-no_recoil_section:slider({name = "Recoil Reduction", min = 0, max = 100, default = 100, interval = 1, suffix = "%", flag = "recoil_reduction"})
+-- Movement Section
+local movement = character:section({name = "movement"})
+movement:toggle({name = "velocity", flag = "movement_velocity"})
+movement:toggle({name = "walk speed", flag = "movement_walk_speed"})
+movement:toggle({name = "jump power", flag = "movement_jump_power"})
+movement:slider({name = "velocity speed", min = 0, max = 1000, default = 311, suffix = "s", flag = "velocity_speed"})
+movement:slider({name = "walk speed", min = 0, max = 100, default = 16, suffix = "s", flag = "walk_speed"})
+movement:slider({name = "jump power", min = 0, max = 500, default = 139, suffix = "s", flag = "jump_power"})
 
--- No Spread Section
-local no_spread_section = rage:section({name = "No Spread"})
-local no_spread_toggle = no_spread_section:toggle({name = "Enable No Spread", flag = "no_spread_enabled"})
-no_spread_section:slider({name = "Spread Reduction", min = 0, max = 100, default = 100, interval = 1, suffix = "%", flag = "spread_reduction"})
+-- Desync Section
+local desync = character:section({name = "desync"})
+desync:toggle({name = "enabled", flag = "desync_enabled"}):keybind({key = Enum.KeyCode.B, mode = "Toggle", flag = "desync_key", name = "Desync"})
+desync:toggle({name = "anti clip", flag = "desync_anti_clip"})
+desync:slider({name = "x min", min = -10, max = 10, default = 0, suffix = "s", flag = "desync_x_min"})
+desync:slider({name = "x max", min = -10, max = 10, default = 0, suffix = "s", flag = "desync_x_max"})
+desync:slider({name = "y min", min = -10, max = 10, default = -1, suffix = "s", flag = "desync_y_min"})
+desync:slider({name = "y max", min = -10, max = 10, default = -1, suffix = "s", flag = "desync_y_max"})
+desync:slider({name = "z min", min = -10, max = 10, default = 0, suffix = "s", flag = "desync_z_min"})
+desync:slider({name = "z max", min = -10, max = 10, default = 0, suffix = "s", flag = "desync_z_max"})
+desync:slider({name = "pitch", min = 0, max = 360, default = 0, flag = "desync_pitch"})
+desync:slider({name = "yaw", min = 0, max = 360, default = 0, flag = "desync_yaw"})
+desync:slider({name = "roll", min = 0, max = 360, default = 180, flag = "desync_roll"})
+desync:dropdown({name = "random angle", flag = "desync_random_angle", items = {"--"}, default = "--"})
 
--- Rapid Fire Section
-local rapid_fire_section = rage:section({name = "Rapid Fire"})
-local rapid_fire_toggle = rapid_fire_section:toggle({name = "Enable Rapid Fire", flag = "rapid_fire_enabled"})
-rapid_fire_section:slider({name = "Fire Rate Speed", min = 100, max = 1000, default = 500, interval = 10, suffix = "%", flag = "fire_rate_speed"})
+-- Character Section (right side)
+local char = character:section({name = "character", side = "right"})
+char:toggle({name = "noclip", flag = "character_noclip"}):keybind({key = Enum.KeyCode.Left, mode = "Toggle", flag = "noclip_key", name = "Noclip"})
+char:toggle({name = "fly", flag = "character_fly"}):keybind({key = Enum.KeyCode.X, mode = "Toggle", flag = "fly_key", name = "Fly"})
+char:slider({name = "fly speed", min = 0, max = 2000, default = 1308, suffix = "s", flag = "fly_speed"})
 
--- Wallbang Section
-local wallbang_section = rage:section({name = "Wallbang", side = "right"})
-local wallbang_toggle = wallbang_section:toggle({name = "Enable Wallbang", flag = "wallbang_enabled"})
-wallbang_section:slider({name = "Wall Penetration Distance", min = 1, max = 100, default = 10, interval = 1, suffix = "studs", flag = "wall_penetration"})
+-- Protection Section
+local protection = character:section({name = "protection", side = "right"})
+protection:toggle({name = "void", flag = "protection_void"}):keybind({key = Enum.KeyCode.Left, mode = "Toggle", flag = "void_key", name = "Void"})
+protection:dropdown({name = "void type", flag = "void_type", items = {"always"}, default = "always"})
+protection:toggle({name = "anti stomp", flag = "protection_anti_stomp"})
 
--- Instant Hit Section
-local instant_hit_section = rage:section({name = "Instant Hit", side = "right"})
-local instant_hit_toggle = instant_hit_section:toggle({name = "Enable Instant Hit", flag = "instant_hit_enabled"})
-instant_hit_section:slider({name = "Instant Hit Time", min = 0, max = 1000, default = 0, interval = 10, suffix = "ms", flag = "instant_hit_time"})
+-- Velocity Breaker Section
+local velocity_breaker = character:section({name = "velocity breaker", side = "right"})
+velocity_breaker:toggle({name = "enabled", flag = "velocity_breaker_enabled"}):keybind({key = Enum.KeyCode.U, mode = "Toggle", flag = "velocity_breaker_key", name = "Velocity Breaker"})
+velocity_breaker:dropdown({name = "velocity type", flag = "velocity_type", items = {"reverse"}, default = "reverse"})
+velocity_breaker:slider({name = "multiplier", min = 0, max = 10, default = 1, flag = "velocity_multiplier"})
 
--- Hit Scan Section
-local hit_scan_section = rage:section({name = "Hit Scan", side = "right"})
-hit_scan_section:toggle({name = "Enable Hit Scan", flag = "hit_scan_enabled"})
-
--- Fake Lag Section
-local fake_lag_section = rage:section({name = "Fake Lag", side = "right"})
-local fake_lag_toggle = fake_lag_section:toggle({name = "Enable Fake Lag", flag = "fake_lag_enabled"})
-fake_lag_section:slider({name = "Fake Lag Intensity", min = 0, max = 1000, default = 200, interval = 10, suffix = "ms", flag = "fake_lag_intensity"})
-
--- Anti Aim Section
-local anti_aim_section = rage:section({name = "Anti Aim", side = "right"})
-local anti_aim_toggle = anti_aim_section:toggle({name = "Enable Anti Aim", flag = "anti_aim_enabled"})
-anti_aim_section:slider({name = "Anti Aim Angle", min = 0, max = 360, default = 180, interval = 1, suffix = "°", flag = "anti_aim_angle"})
+-- Ragdoll Section
+local ragdoll = character:section({name = "ragdoll", side = "right"})
+ragdoll:toggle({name = "enabled", flag = "ragdoll_enabled"}):keybind({key = Enum.KeyCode.J, mode = "Toggle", flag = "ragdoll_key", name = "Ragdoll"})
+ragdoll:dropdown({name = "shape", flag = "ragdoll_shape", items = {"ball"}, default = "ball"})
 
 -- MISCELLANEOUS TAB
 local misc = window:tab({name = "misc"})
 
--- Visual Enhancements Section
-local visual_enhancements_section = misc:section({name = "Visual Enhancements"})
-visual_enhancements_section:toggle({name = "No Fog", flag = "no_fog_enabled"})
-visual_enhancements_section:toggle({name = "No Flashbang", flag = "no_flashbang_enabled"})
+-- Chat Spy Section
+local chat_spy = misc:section({name = "chat spy"})
+chat_spy:toggle({name = "enabled", flag = "chat_spy_enabled"})
 
--- Weapon Enhancements Section
-local weapon_enhancements_section = misc:section({name = "Weapon Enhancements"})
-weapon_enhancements_section:toggle({name = "Auto Reload", flag = "auto_reload_enabled"})
-local fast_reload_toggle = weapon_enhancements_section:toggle({name = "Fast Reload", flag = "fast_reload_enabled"})
-weapon_enhancements_section:slider({name = "Reload Speed Multiplier", min = 1, max = 10, default = 2, interval = 0.1, suffix = "x", flag = "reload_speed_multiplier"})
+-- Player Info Section (moved to left side under chat spy)
+local player_info = misc:section({name = "player info"}) -- Removed side="right"
+player_info:button({name = "view", callback = function()
+    -- View player functionality here
+end})
+player_info:dropdown({name = "teleport type", flag = "player_teleport_type", items = {"safe"}, default = "safe"})
+player_info:dropdown({name = "target", flag = "player_target", items = {"Swishings"}, default = "Swishings"})
+player_info:textbox({name = "target", flag = "player_target_input"})
+player_info:textbox({name = "ray", flag = "player_ray_input"})
 
--- Utility Section
-local utility_section = misc:section({name = "Utility", side = "right"})
-utility_section:toggle({name = "Anti-Chat Filter", flag = "anti_chat_filter_enabled"})
-utility_section:button({name = "Teleport to Player", callback = function()
-    print("Teleport to player functionality would go here")
+-- Teleport Section
+local teleport = misc:section({name = "teleport", side = "right"})
+teleport:dropdown({name = "location", flag = "teleport_location", items = {"Barber Shop"}, default = "Barber Shop"})
+teleport:dropdown({name = "type", flag = "teleport_type", items = {"safe"}, default = "safe"})
+teleport:button({name = "teleport", callback = function()
+    -- Teleport functionality here
+end})
+
+-- Vehicle Section
+local vehicle = misc:section({name = "vehicle", side = "right"})
+vehicle:toggle({name = "fly", flag = "vehicle_fly"}):keybind({key = Enum.KeyCode.X, mode = "Toggle", flag = "vehicle_fly_key", name = "Vehicle Fly"})
+vehicle:slider({name = "fly speed", min = 0, max = 2000, default = 1012, suffix = "s", flag = "vehicle_fly_speed"})
+vehicle:button({name = "get vehicle", callback = function()
+    -- Get vehicle functionality here
 end})
 
 -- SETTINGS TAB
@@ -3179,7 +3248,7 @@ end})
 ui_settings_section:toggle({name = "Target Indicator", flag = "target_indicator", callback = function(bool)
     library.target_indicator.Visible = bool 
 end})
-ui_settings_section:label({name = "UI bind"}):keybind({key = Enum.KeyCode.Insert, default = true, flag = "UI_Bind", callback = function(bool)
+ui_settings_section:label({name = "UI bind"}):keybind({key = Enum.KeyCode.RightShift, default = true, flag = "UI_Bind", callback = function(bool)
     library.gui.Enabled = bool 
 end})
 
