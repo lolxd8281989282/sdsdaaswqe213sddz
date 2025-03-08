@@ -1,699 +1,661 @@
--- Combined ESP System (3D, Corner, and Regular ESP)
+-- Combined ESP System (3D ESP, Corner ESP, and 2D ESP)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Main ESP Settings
-local ESP = {
-    Enabled = true,
-    BoxType = "2D", -- "2D", "3D", or "corner"
-    
-    -- Box Settings
-    ShowBoxes = true,
-    BoxColor = Color3.fromRGB(255, 255, 255),
-    BoxThickness = 1,
-    
-    -- Name Settings
-    ShowNames = true,
-    NameColor = Color3.fromRGB(255, 255, 255),
-    TextSize = 12,
-    
-    -- Health Settings
-    ShowHealthBars = true,
-    
-    -- Armor Settings
-    ShowArmorBars = true,
-    ArmorBarColor = Color3.fromRGB(0, 170, 255),
-    ArmoredOnly = false,
-    
-    -- Distance Settings
-    ShowDistance = true,
-    DistanceColor = Color3.fromRGB(255, 255, 255),
-    
-    -- Weapon Settings
-    ShowWeapon = true,
-    WeaponColor = Color3.fromRGB(255, 255, 255),
-    
-    -- Tracer Settings
-    ShowTracers = true,
-    TracerColor = Color3.fromRGB(255, 255, 255),
-    TracerThickness = 1,
-    TracerOrigin = "Bottom", -- "Top", "Center", "Bottom", "Mouse"
-    
-    -- Chams Settings
-    ShowChams = true,
-    ChamsColor = Color3.fromRGB(255, 255, 255),
-    ChamsTransparency = 0.5,
-    
-    -- Other Settings
-    TeamCheck = false,
-    Distance = 1000,
-    
-    -- Storage
-    Objects = {},
+-- Storage for ESP objects
+local ESPObjects = {
+    Box2D = {},
+    Name = {},
+    Distance = {},
+    Weapon = {},
+    Health = {},
+    Armor = {},
+    Tracer = {},
+    Corner = {},
+    Box3D = {},
     Chams = {}
 }
 
--- Function to get armor value from a player (works with different games)
-local function GetArmorValue(player)
-    -- Default armor value (0-100 scale)
-    local armorValue = 0
-    local maxArmorValue = 100
-    
-    -- Try to find armor in different places/formats
-    if player.Character then
-        -- Method 1: Check for Armor value in character
-        local armorObj = player.Character:FindFirstChild("Armor") or player.Character:FindFirstChild("Shield")
-        if armorObj and armorObj:IsA("NumberValue") then
-            armorValue = armorObj.Value
-            maxArmorValue = 100 -- Assume max is 100 if not specified
+-- Utility functions
+local function GetPlayerWeapon(player)
+    -- Replace with your actual weapon detection logic
+    if player and player.Character then
+        local tool = player.Character:FindFirstChildOfClass("Tool")
+        if tool then
+            return tool.Name
         end
-        
-        -- Method 2: Check for armor in humanoid (some games store it there)
-        local humanoid = player.Character:FindFirstChild("Humanoid")
+    end
+    return "None"
+end
+
+local function GetPlayerHealth(player)
+    if player and player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
         if humanoid then
-            -- Some games use MaxShield property
-            if humanoid:FindFirstChild("MaxShield") and humanoid:FindFirstChild("Shield") then
-                armorValue = humanoid.Shield.Value
-                maxArmorValue = humanoid.MaxShield.Value
-            end
-        end
-        
-        -- Method 3: Check for Da Hood specific implementation
-        -- Da Hood often stores armor in a specific format
-        local daHoodArmor = player.Character:FindFirstChild("BodyEffects")
-        if daHoodArmor and daHoodArmor:FindFirstChild("Armor") then
-            armorValue = daHoodArmor.Armor.Value
-            maxArmorValue = 100 -- Da Hood typically uses 0-100
-        end
-        
-        -- Method 4: Check player stats
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if leaderstats then
-            local armor = leaderstats:FindFirstChild("Armor") or leaderstats:FindFirstChild("Shield")
-            if armor and armor:IsA("NumberValue") then
-                armorValue = armor.Value
-                maxArmorValue = 100
-            end
+            return humanoid.Health, humanoid.MaxHealth
         end
     end
-    
-    -- Ensure armor value is between 0 and max
-    armorValue = math.clamp(armorValue, 0, maxArmorValue)
-    
-    -- Return armor percentage (0-1)
-    return armorValue / maxArmorValue
+    return 0, 100
 end
 
--- Function to get equipped weapon (works with different games)
-local function GetEquippedWeapon(player)
-    if not player or not player.Character then return "None" end
-    
-    -- Store the equipped item name
-    local equippedItem = "None"
-    
-    -- Method 1: Check for tools in character (most common)
-    for _, child in pairs(player.Character:GetChildren()) do
-        if child:IsA("Tool") and child:FindFirstChild("Handle") then
-            equippedItem = child.Name
-            break
+local function GetPlayerArmor(player)
+    -- Replace with your actual armor detection logic
+    if player and player.Character then
+        -- Example: Check for armor value in some attribute or value
+        local armor = player.Character:FindFirstChild("Armor")
+        if armor and armor:IsA("NumberValue") then
+            return armor.Value
         end
     end
-    
-    -- If we found an item, return it
-    if equippedItem ~= "None" then
-        return equippedItem
-    end
-    
-    -- Method 2: Check for Da Hood specific implementation
-    local bodyEffects = player.Character:FindFirstChild("BodyEffects")
-    if bodyEffects then
-        -- Check for equipped tool in Da Hood
-        local toolFolder = bodyEffects:FindFirstChild("ToolStorage")
-        if toolFolder then
-            for _, tool in pairs(toolFolder:GetChildren()) do
-                if tool:IsA("Tool") then
-                    equippedItem = tool.Name
-                    break
-                end
-            end
-        end
-    end
-    
-    -- If we found an item, return it
-    if equippedItem ~= "None" then
-        return equippedItem
-    end
-    
-    -- Method 3: Check for currently equipped tool in Backpack
-    if player:FindFirstChild("Backpack") then
-        -- Some games use a different method to determine equipped items
-        -- They move the tool out of the Backpack when equipped
-        local backpack = player:FindFirstChild("Backpack")
-        local allTools = {}
-        
-        -- Collect all tools in backpack
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                table.insert(allTools, tool.Name)
-            end
-        end
-        
-        -- Check character for tools not in backpack
-        for _, child in pairs(player.Character:GetChildren()) do
-            if child:IsA("Tool") then
-                local isInBackpack = false
-                for _, toolName in pairs(allTools) do
-                    if child.Name == toolName then
-                        isInBackpack = true
-                        break
-                    end
-                end
-                
-                if not isInBackpack then
-                    equippedItem = child.Name
-                    break
-                end
-            end
-        end
-    end
-    
-    return equippedItem
+    return 0
 end
 
--- Function to create chams for a player
-local function CreateChams(player)
-    if player == LocalPlayer then return end
-    
-    -- Remove existing chams if any
-    if ESP.Chams[player] then
-        ESP.Chams[player]:Destroy()
-        ESP.Chams[player] = nil
-    end
-    
-    -- Create new chams if character exists
-    if player.Character then
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "ESPHighlight"
-        highlight.FillColor = ESP.ChamsColor
-        highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
-        highlight.FillTransparency = ESP.ChamsTransparency
-        highlight.OutlineTransparency = 0.3
-        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        highlight.Adornee = player.Character
-        highlight.Parent = player.Character
-        
-        ESP.Chams[player] = highlight
-    end
+local function IsPlayerArmored(player)
+    return GetPlayerArmor(player) > 0
 end
 
--- Function to create ESP elements for a player
+local function GetDistanceFromPlayer(player)
+    if LocalPlayer.Character and player.Character then
+        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+        local localRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if rootPart and localRootPart then
+            return (rootPart.Position - localRootPart.Position).Magnitude
+        end
+    end
+    return 0
+end
+
+local function GetTeam(player)
+    return player.Team
+end
+
+local function IsTeammate(player)
+    if not flags.esp_teammates then
+        return GetTeam(player) == GetTeam(LocalPlayer)
+    end
+    return false
+end
+
+local function GetBoxCorners(player)
+    local character = player.Character
+    if not character then return nil end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local head = character:FindFirstChild("Head")
+    if not hrp or not head then return nil end
+    
+    local headPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+    if not onScreen then return nil end
+    
+    local rootPos = Camera:WorldToViewportPoint(hrp.Position)
+    local legPos = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+    
+    local boxSize = Vector2.new(math.abs(legPos.Y - headPos.Y) * 0.6, math.abs(legPos.Y - headPos.Y))
+    local boxPosition = Vector2.new(headPos.X - boxSize.X / 2, headPos.Y)
+    
+    return {
+        TopLeft = boxPosition,
+        TopRight = boxPosition + Vector2.new(boxSize.X, 0),
+        BottomLeft = boxPosition + Vector2.new(0, boxSize.Y),
+        BottomRight = boxPosition + Vector2.new(boxSize.X, boxSize.Y),
+        Size = boxSize
+    }
+end
+
+-- Function to create ESP objects for a player
 local function CreateESP(player)
     if player == LocalPlayer then return end
     
-    -- Create a table to store all drawing objects for this player
-    local drawings = {}
-    
     -- 2D Box ESP
-    drawings.box = Drawing.new("Square")
-    drawings.box.Visible = false
-    drawings.box.Filled = false
-    drawings.box.Thickness = ESP.BoxThickness
-    drawings.box.Color = ESP.BoxColor
-    drawings.box.Transparency = 1
+    local box2d = {
+        box = Drawing.new("Square"),
+        outline = Drawing.new("Square")
+    }
+    box2d.box.Thickness = 1
+    box2d.box.Filled = false
+    box2d.box.Visible = false
+    box2d.outline.Thickness = 3
+    box2d.outline.Filled = false
+    box2d.outline.Visible = false
+    ESPObjects.Box2D[player] = box2d
     
-    -- Box outline
-    drawings.boxOutline = Drawing.new("Square")
-    drawings.boxOutline.Visible = false
-    drawings.boxOutline.Filled = false
-    drawings.boxOutline.Thickness = ESP.BoxThickness + 2
-    drawings.boxOutline.Color = Color3.fromRGB(0, 0, 0)
-    drawings.boxOutline.Transparency = 1
+    -- Name ESP
+    local name = Drawing.new("Text")
+    name.Size = 13
+    name.Center = true
+    name.Outline = true
+    name.Visible = false
+    name.Font = 2
+    ESPObjects.Name[player] = name
     
-    -- Name text
-    drawings.name = Drawing.new("Text")
-    drawings.name.Visible = false
-    drawings.name.Center = true
-    drawings.name.Outline = true
-    drawings.name.Size = ESP.TextSize
-    drawings.name.Color = ESP.NameColor
-    drawings.name.Font = 3
+    -- Distance ESP
+    local distance = Drawing.new("Text")
+    distance.Size = 13
+    distance.Center = true
+    distance.Outline = true
+    distance.Visible = false
+    distance.Font = 2
+    ESPObjects.Distance[player] = distance
     
-    -- Weapon text
-    drawings.weapon = Drawing.new("Text")
-    drawings.weapon.Visible = false
-    drawings.weapon.Center = true
-    drawings.weapon.Outline = true
-    drawings.weapon.Size = ESP.TextSize
-    drawings.weapon.Color = ESP.WeaponColor
-    drawings.weapon.Font = 3
+    -- Weapon ESP
+    local weapon = Drawing.new("Text")
+    weapon.Size = 13
+    weapon.Center = true
+    weapon.Outline = true
+    weapon.Visible = false
+    weapon.Font = 2
+    ESPObjects.Weapon[player] = weapon
     
-    -- Distance text
-    drawings.distance = Drawing.new("Text")
-    drawings.distance.Visible = false
-    drawings.distance.Center = true
-    drawings.distance.Outline = true
-    drawings.distance.Size = ESP.TextSize
-    drawings.distance.Color = ESP.DistanceColor
-    drawings.distance.Font = 3
+    -- Health Bar ESP
+    local health = {
+        bar = Drawing.new("Square"),
+        outline = Drawing.new("Square"),
+        text = Drawing.new("Text")
+    }
+    health.bar.Thickness = 1
+    health.bar.Filled = true
+    health.bar.Visible = false
+    health.outline.Thickness = 1
+    health.outline.Filled = false
+    health.outline.Visible = false
+    health.text.Size = 13
+    health.text.Center = false
+    health.text.Outline = true
+    health.text.Visible = false
+    health.text.Font = 2
+    ESPObjects.Health[player] = health
     
-    -- Health bar
-    drawings.healthBar = Drawing.new("Line")
-    drawings.healthBar.Visible = false
-    drawings.healthBar.Thickness = 2
-    drawings.healthBar.Color = Color3.fromRGB(0, 255, 0)
+    -- Armor Bar ESP
+    local armor = {
+        bar = Drawing.new("Square"),
+        outline = Drawing.new("Square"),
+        text = Drawing.new("Text")
+    }
+    armor.bar.Thickness = 1
+    armor.bar.Filled = true
+    armor.bar.Visible = false
+    armor.outline.Thickness = 1
+    armor.outline.Filled = false
+    armor.outline.Visible = false
+    armor.text.Size = 13
+    armor.text.Center = false
+    armor.text.Outline = true
+    armor.text.Visible = false
+    armor.text.Font = 2
+    ESPObjects.Armor[player] = armor
     
-    -- Health bar background
-    drawings.healthBarBG = Drawing.new("Line")
-    drawings.healthBarBG.Visible = false
-    drawings.healthBarBG.Thickness = 4
-    drawings.healthBarBG.Color = Color3.fromRGB(0, 0, 0)
+    -- Tracer ESP
+    local tracer = Drawing.new("Line")
+    tracer.Thickness = 1
+    tracer.Visible = false
+    ESPObjects.Tracer[player] = tracer
     
-    -- Armor bar
-    drawings.armorBar = Drawing.new("Line")
-    drawings.armorBar.Visible = false
-    drawings.armorBar.Thickness = 2
-    drawings.armorBar.Color = ESP.ArmorBarColor
-    
-    -- Armor bar background
-    drawings.armorBarBG = Drawing.new("Line")
-    drawings.armorBarBG.Visible = false
-    drawings.armorBarBG.Thickness = 4
-    drawings.armorBarBG.Color = Color3.fromRGB(0, 0, 0)
-    
-    -- Tracer
-    drawings.tracer = Drawing.new("Line")
-    drawings.tracer.Visible = false
-    drawings.tracer.Thickness = ESP.TracerThickness
-    drawings.tracer.Color = ESP.TracerColor
-    
-    -- 3D Box ESP (12 lines)
-    drawings.lines3D = {}
-    for i = 1, 12 do
-        local line = Drawing.new("Line")
-        line.Visible = false
-        line.Thickness = ESP.BoxThickness
-        line.Color = ESP.BoxColor
-        line.Transparency = 1
-        drawings.lines3D[i] = line
-    end
-    
-    -- Corner ESP (8 lines)
-    drawings.corners = {}
+    -- Corner ESP
+    local corners = {}
     for i = 1, 8 do
         local line = Drawing.new("Line")
         line.Visible = false
-        line.Thickness = ESP.BoxThickness
-        line.Color = ESP.BoxColor
-        line.Transparency = 1
-        drawings.corners[i] = line
+        line.Thickness = 1
+        corners[i] = line
+    end
+    ESPObjects.Corner[player] = corners
+    
+    -- 3D Box ESP
+    local box3d = {}
+    for i = 1, 12 do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        line.Thickness = 1
+        box3d[i] = line
+    end
+    ESPObjects.Box3D[player] = box3d
+    
+    -- Chams (if your original ESP had it)
+    local chams = {
+        highlight = Instance.new("Highlight")
+    }
+    chams.highlight.Enabled = false
+    chams.highlight.FillTransparency = 0.5
+    chams.highlight.OutlineTransparency = 0
+    ESPObjects.Chams[player] = chams
+    
+    -- Cleanup on character removal
+    player.CharacterRemoving:Connect(function()
+        if ESPObjects.Box2D[player] then
+            ESPObjects.Box2D[player].box.Visible = false
+            ESPObjects.Box2D[player].outline.Visible = false
+        end
+        
+        if ESPObjects.Name[player] then
+            ESPObjects.Name[player].Visible = false
+        end
+        
+        if ESPObjects.Distance[player] then
+            ESPObjects.Distance[player].Visible = false
+        end
+        
+        if ESPObjects.Weapon[player] then
+            ESPObjects.Weapon[player].Visible = false
+        end
+        
+        if ESPObjects.Health[player] then
+            ESPObjects.Health[player].bar.Visible = false
+            ESPObjects.Health[player].outline.Visible = false
+            ESPObjects.Health[player].text.Visible = false
+        end
+        
+        if ESPObjects.Armor[player] then
+            ESPObjects.Armor[player].bar.Visible = false
+            ESPObjects.Armor[player].outline.Visible = false
+            ESPObjects.Armor[player].text.Visible = false
+        end
+        
+        if ESPObjects.Tracer[player] then
+            ESPObjects.Tracer[player].Visible = false
+        end
+        
+        if ESPObjects.Corner[player] then
+            for _, line in pairs(ESPObjects.Corner[player]) do
+                line.Visible = false
+            end
+        end
+        
+        if ESPObjects.Box3D[player] then
+            for _, line in pairs(ESPObjects.Box3D[player]) do
+                line.Visible = false
+            end
+        end
+        
+        if ESPObjects.Chams[player] and ESPObjects.Chams[player].highlight then
+            ESPObjects.Chams[player].highlight.Enabled = false
+        end
+    end)
+    
+    -- Set up chams when character is added
+    player.CharacterAdded:Connect(function(character)
+        if ESPObjects.Chams[player] and ESPObjects.Chams[player].highlight then
+            ESPObjects.Chams[player].highlight.Parent = character
+        end
+    end)
+    
+    -- Set up chams for existing character
+    if player.Character and ESPObjects.Chams[player] and ESPObjects.Chams[player].highlight then
+        ESPObjects.Chams[player].highlight.Parent = player.Character
+    end
+end
+
+-- Update ESP
+RunService.RenderStepped:Connect(function()
+    for player, objects in pairs(ESPObjects.Box2D) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            objects.box.Visible = false
+            objects.outline.Visible = false
+            continue
+        end
+        
+        -- Only show if ESP is enabled and box type is "2D"
+        if flags.esp_box and flags.box_type == "2D" then
+            local corners = GetBoxCorners(player)
+            if corners then
+                objects.box.Size = corners.Size
+                objects.box.Position = corners.TopLeft
+                objects.box.Color = flags.esp_box_color.Color
+                objects.box.Visible = true
+                
+                objects.outline.Size = corners.Size
+                objects.outline.Position = corners.TopLeft
+                objects.outline.Color = Color3.new(0, 0, 0)
+                objects.outline.Visible = true
+            else
+                objects.box.Visible = false
+                objects.outline.Visible = false
+            end
+        else
+            objects.box.Visible = false
+            objects.outline.Visible = false
+        end
     end
     
-    -- Store the ESP objects for this player
-    ESP.Objects[player] = drawings
+    -- Update Name ESP
+    for player, name in pairs(ESPObjects.Name) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            name.Visible = false
+            continue
+        end
+        
+        if flags.esp_name then
+            local corners = GetBoxCorners(player)
+            if corners then
+                name.Position = Vector2.new(corners.TopLeft.X + corners.Size.X / 2, corners.TopLeft.Y - 15)
+                name.Text = player.Name
+                name.Color = flags.esp_name_color.Color
+                name.Visible = true
+            else
+                name.Visible = false
+            end
+        else
+            name.Visible = false
+        end
+    end
     
-    -- Create chams for this player
-    CreateChams(player)
+    -- Update Distance ESP
+    for player, distance in pairs(ESPObjects.Distance) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            distance.Visible = false
+            continue
+        end
+        
+        if flags.esp_distance then
+            local corners = GetBoxCorners(player)
+            if corners then
+                local dist = math.floor(GetDistanceFromPlayer(player))
+                distance.Position = Vector2.new(corners.BottomRight.X + 5, corners.BottomRight.Y)
+                distance.Text = tostring(dist) .. "m"
+                distance.Color = flags.esp_distance_color.Color
+                distance.Visible = true
+            else
+                distance.Visible = false
+            end
+        else
+            distance.Visible = false
+        end
+    end
     
-    -- Clean up ESP when player leaves
-    player.AncestryChanged:Connect(function(_, parent)
-        if not parent then
-            if ESP.Objects[player] then
-                for _, drawing in pairs(ESP.Objects[player]) do
-                    if typeof(drawing) == "table" then
-                        for _, line in pairs(drawing) do
-                            line:Remove()
-                        end
-                    else
-                        drawing:Remove()
+    -- Update Weapon ESP
+    for player, weapon in pairs(ESPObjects.Weapon) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            weapon.Visible = false
+            continue
+        end
+        
+        if flags.esp_weapon then
+            local corners = GetBoxCorners(player)
+            if corners then
+                weapon.Position = Vector2.new(corners.BottomLeft.X + corners.Size.X / 2, corners.BottomLeft.Y + 15)
+                weapon.Text = GetPlayerWeapon(player)
+                weapon.Color = flags.esp_weapon_color.Color
+                weapon.Visible = true
+            else
+                weapon.Visible = false
+            end
+        else
+            weapon.Visible = false
+        end
+    end
+    
+    -- Update Health Bar ESP
+    for player, health in pairs(ESPObjects.Health) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            health.bar.Visible = false
+            health.outline.Visible = false
+            health.text.Visible = false
+            continue
+        end
+        
+        if flags.esp_healthbar then
+            local corners = GetBoxCorners(player)
+            if corners then
+                local currentHealth, maxHealth = GetPlayerHealth(player)
+                local healthPercentage = currentHealth / maxHealth
+                
+                local barWidth = 3
+                local barHeight = corners.Size.Y
+                
+                health.outline.Size = Vector2.new(barWidth + 2, barHeight + 2)
+                health.outline.Position = Vector2.new(corners.TopLeft.X - barWidth - 4, corners.TopLeft.Y - 1)
+                health.outline.Color = Color3.new(0, 0, 0)
+                health.outline.Visible = true
+                
+                health.bar.Size = Vector2.new(barWidth, barHeight * healthPercentage)
+                health.bar.Position = Vector2.new(corners.TopLeft.X - barWidth - 3, corners.TopLeft.Y + barHeight * (1 - healthPercentage))
+                
+                -- Health color gradient (red to green)
+                health.bar.Color = Color3.new(1 - healthPercentage, healthPercentage, 0)
+                health.bar.Visible = true
+                
+                if flags.esp_healthtext then
+                    health.text.Text = tostring(math.floor(currentHealth))
+                    health.text.Position = Vector2.new(corners.TopLeft.X - barWidth - 16, corners.TopLeft.Y + barHeight * (1 - healthPercentage))
+                    health.text.Color = Color3.new(1, 1, 1)
+                    health.text.Visible = true
+                else
+                    health.text.Visible = false
+                end
+            else
+                health.bar.Visible = false
+                health.outline.Visible = false
+                health.text.Visible = false
+            end
+        else
+            health.bar.Visible = false
+            health.outline.Visible = false
+            health.text.Visible = false
+        end
+    end
+    
+    -- Update Armor Bar ESP
+    for player, armor in pairs(ESPObjects.Armor) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            armor.bar.Visible = false
+            armor.outline.Visible = false
+            armor.text.Visible = false
+            continue
+        end
+        
+        if flags.esp_armor and (not flags.esp_armored_only or IsPlayerArmored(player)) then
+            local corners = GetBoxCorners(player)
+            if corners then
+                local armorValue = GetPlayerArmor(player)
+                local armorPercentage = armorValue / 100 -- Assuming max armor is 100
+                
+                local barWidth = 3
+                local barHeight = corners.Size.Y
+                
+                armor.outline.Size = Vector2.new(barWidth + 2, barHeight + 2)
+                armor.outline.Position = Vector2.new(corners.TopRight.X + 2, corners.TopRight.Y - 1)
+                armor.outline.Color = Color3.new(0, 0, 0)
+                armor.outline.Visible = true
+                
+                armor.bar.Size = Vector2.new(barWidth, barHeight * armorPercentage)
+                armor.bar.Position = Vector2.new(corners.TopRight.X + 3, corners.TopRight.Y + barHeight * (1 - armorPercentage))
+                armor.bar.Color = Color3.new(0, 0.5, 1) -- Blue for armor
+                armor.bar.Visible = true
+                
+                armor.text.Text = tostring(math.floor(armorValue))
+                armor.text.Position = Vector2.new(corners.TopRight.X + barWidth + 5, corners.TopRight.Y + barHeight * (1 - armorPercentage))
+                armor.text.Color = Color3.new(1, 1, 1)
+                armor.text.Visible = flags.esp_armortext
+            else
+                armor.bar.Visible = false
+                armor.outline.Visible = false
+                armor.text.Visible = false
+            end
+        else
+            armor.bar.Visible = false
+            armor.outline.Visible = false
+            armor.text.Visible = false
+        end
+    end
+    
+    -- Update Tracer ESP
+    for player, tracer in pairs(ESPObjects.Tracer) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            tracer.Visible = false
+            continue
+        end
+        
+        if flags.esp_tracer then
+            local rootPart = player.Character.HumanoidRootPart
+            local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+            
+            if onScreen then
+                local tracerStart
+                if flags.tracer_origin == "bottom" then
+                    tracerStart = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                elseif flags.tracer_origin == "top" then
+                    tracerStart = Vector2.new(Camera.ViewportSize.X / 2, 0)
+                elseif flags.tracer_origin == "center" then
+                    tracerStart = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                else
+                    tracerStart = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                end
+                
+                tracer.From = tracerStart
+                tracer.To = Vector2.new(rootPos.X, rootPos.Y)
+                tracer.Color = flags.esp_tracer_color.Color
+                tracer.Visible = true
+            else
+                tracer.Visible = false
+            end
+        else
+            tracer.Visible = false
+        end
+    end
+    
+    -- Update Corner ESP
+    for player, corners in pairs(ESPObjects.Corner) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            for _, line in pairs(corners) do
+                line.Visible = false
+            end
+            continue
+        end
+        
+        -- Only show if ESP is enabled and box type is "corner"
+        if flags.esp_box and flags.box_type == "corner" then
+            local boxCorners = GetBoxCorners(player)
+            if boxCorners then
+                local cornerSize = boxCorners.Size.Y * 0.2
+                
+                -- Update corner lines
+                for i, line in ipairs(corners) do
+                    line.Color = flags.esp_box_color.Color
+                    line.Visible = true
+                    
+                    -- Set corner positions based on index
+                    if i == 1 then -- Top Left Horizontal
+                        line.From = boxCorners.TopLeft
+                        line.To = boxCorners.TopLeft + Vector2.new(cornerSize, 0)
+                    elseif i == 2 then -- Top Left Vertical
+                        line.From = boxCorners.TopLeft
+                        line.To = boxCorners.TopLeft + Vector2.new(0, cornerSize)
+                    elseif i == 3 then -- Top Right Horizontal
+                        line.From = boxCorners.TopRight
+                        line.To = boxCorners.TopRight + Vector2.new(-cornerSize, 0)
+                    elseif i == 4 then -- Top Right Vertical
+                        line.From = boxCorners.TopRight
+                        line.To = boxCorners.TopRight + Vector2.new(0, cornerSize)
+                    elseif i == 5 then -- Bottom Left Horizontal
+                        line.From = boxCorners.BottomLeft
+                        line.To = boxCorners.BottomLeft + Vector2.new(cornerSize, 0)
+                    elseif i == 6 then -- Bottom Left Vertical
+                        line.From = boxCorners.BottomLeft
+                        line.To = boxCorners.BottomLeft + Vector2.new(0, -cornerSize)
+                    elseif i == 7 then -- Bottom Right Horizontal
+                        line.From = boxCorners.BottomRight
+                        line.To = boxCorners.BottomRight + Vector2.new(-cornerSize, 0)
+                    elseif i == 8 then -- Bottom Right Vertical
+                        line.From = boxCorners.BottomRight
+                        line.To = boxCorners.BottomRight + Vector2.new(0, -cornerSize)
                     end
                 end
-                ESP.Objects[player] = nil
+            else
+                for _, line in pairs(corners) do
+                    line.Visible = false
+                end
+            end
+        else
+            for _, line in pairs(corners) do
+                line.Visible = false
+            end
+        end
+    end
+    
+    -- Update 3D Box ESP
+    for player, lines in pairs(ESPObjects.Box3D) do
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
+            for _, line in pairs(lines) do
+                line.Visible = false
+            end
+            continue
+        end
+        
+        -- Only show if ESP is enabled and box type is "3D"
+        if flags.esp_box and flags.box_type == "3D" then
+            local rootPart = player.Character.HumanoidRootPart
+            local size = Vector3.new(4, 5, 4)
+            local cf = rootPart.CFrame
+            
+            local corners = {
+                cf * CFrame.new(size.X/2, size.Y/2, size.Z/2),
+                cf * CFrame.new(-size.X/2, size.Y/2, size.Z/2),
+                cf * CFrame.new(-size.X/2, size.Y/2, -size.Z/2),
+                cf * CFrame.new(size.X/2, size.Y/2, -size.Z/2),
+                cf * CFrame.new(size.X/2, -size.Y/2, size.Z/2),
+                cf * CFrame.new(-size.X/2, -size.Y/2, size.Z/2),
+                cf * CFrame.new(-size.X/2, -size.Y/2, -size.Z/2),
+                cf * CFrame.new(size.X/2, -size.Y/2, -size.Z/2)
+            }
+            
+            local points = {}
+            local onScreen = true
+            
+            for i, corner in ipairs(corners) do
+                local point, visible = Camera:WorldToViewportPoint(corner.Position)
+                if not visible then
+                    onScreen = false
+                    break
+                end
+                points[i] = Vector2.new(point.X, point.Y)
             end
             
-            if ESP.Chams[player] then
-                ESP.Chams[player]:Destroy()
-                ESP.Chams[player] = nil
-            end
-        end
-    end)
-    
-    -- Update chams when character changes
-    player.CharacterAdded:Connect(function(character)
-        if ESP.Chams[player] then
-            ESP.Chams[player]:Destroy()
-            ESP.Chams[player] = nil
-        end
-        
-        task.wait(0.5) -- Wait for character to fully load
-        CreateChams(player)
-    end)
-end
-
--- Function to update ESP for a player
-local function UpdateESP(player, drawings)
-    -- Skip if player is not valid
-    if not player or not player.Parent then
-        for _, drawing in pairs(drawings) do
-            if typeof(drawing) == "table" then
-                for _, line in pairs(drawing) do
-                    line.Visible = false
+            if onScreen then
+                local connections = {
+                    {1,2}, {2,3}, {3,4}, {4,1},  -- Top square
+                    {5,6}, {6,7}, {7,8}, {8,5},  -- Bottom square
+                    {1,5}, {2,6}, {3,7}, {4,8}   -- Connecting lines
+                }
+                
+                for i, connection in ipairs(connections) do
+                    local line = lines[i]
+                    line.From = points[connection[1]]
+                    line.To = points[connection[2]]
+                    line.Color = flags.esp_box_color.Color
+                    line.Visible = true
                 end
             else
-                drawing.Visible = false
-            end
-        end
-        return
-    end
-    
-    -- Skip if character doesn't exist or is missing parts
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or not player.Character:FindFirstChild("Head") then
-        for _, drawing in pairs(drawings) do
-            if typeof(drawing) == "table" then
-                for _, line in pairs(drawing) do
+                for _, line in pairs(lines) do
                     line.Visible = false
                 end
-            else
-                drawing.Visible = false
+            end
+        else
+            for _, line in pairs(lines) do
+                line.Visible = false
             end
         end
-        return
     end
     
-    local humanoid = player.Character:FindFirstChild("Humanoid")
-    local head = player.Character:FindFirstChild("Head")
-    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
-    
-    -- Calculate distance between local player and target
-    local distance = 0
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-    end
-    
-    -- Check if player is within distance
-    if distance > ESP.Distance then
-        for _, drawing in pairs(drawings) do
-            if typeof(drawing) == "table" then
-                for _, line in pairs(drawing) do
-                    line.Visible = false
-                end
-            else
-                drawing.Visible = false
-            end
-        end
-        return
-    end
-    
-    -- Check team if team check is enabled
-    if ESP.TeamCheck and LocalPlayer.Team == player.Team then
-        for _, drawing in pairs(drawings) do
-            if typeof(drawing) == "table" then
-                for _, line in pairs(drawing) do
-                    line.Visible = false
-                end
-            else
-                drawing.Visible = false
-            end
-        end
-        return
-    end
-    
-    -- Get screen positions
-    local headPos, headVisible = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-    local rootPos, rootVisible = Camera:WorldToViewportPoint(rootPart.Position)
-    local legPos = Camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
-    
-    -- Check if player is on screen
-    if not rootVisible then
-        for _, drawing in pairs(drawings) do
-            if typeof(drawing) == "table" then
-                for _, line in pairs(drawing) do
-                    line.Visible = false
-                end
-            else
-                drawing.Visible = false
-            end
-        end
-        return
-    end
-    
-    -- Calculate box dimensions
-    local boxHeight = math.abs(headPos.Y - legPos.Y)
-    local boxWidth = boxHeight * 0.6
-    
-    local boxPos = Vector2.new(rootPos.X - boxWidth / 2, headPos.Y)
-    
-    -- Update ESP based on box type
-    if ESP.BoxType == "2D" and ESP.ShowBoxes then
-        -- 2D Box
-        drawings.box.Size = Vector2.new(boxWidth, boxHeight)
-        drawings.box.Position = boxPos
-        drawings.box.Color = ESP.BoxColor
-        drawings.box.Thickness = ESP.BoxThickness
-        drawings.box.Visible = true
-        
-        drawings.boxOutline.Size = Vector2.new(boxWidth, boxHeight)
-        drawings.boxOutline.Position = boxPos
-        drawings.boxOutline.Visible = true
-        
-        -- Hide 3D and corner boxes
-        for _, line in pairs(drawings.lines3D) do
-            line.Visible = false
+    -- Update Chams
+    for player, chams in pairs(ESPObjects.Chams) do
+        if not player.Character or IsTeammate(player) then
+            chams.highlight.Enabled = false
+            continue
         end
         
-        for _, line in pairs(drawings.corners) do
-            line.Visible = false
-        end
-    elseif ESP.BoxType == "3D" and ESP.ShowBoxes then
-        -- 3D Box
-        drawings.box.Visible = false
-        drawings.boxOutline.Visible = false
-        
-        -- Hide corner boxes
-        for _, line in pairs(drawings.corners) do
-            line.Visible = false
-        end
-        
-        -- Calculate 3D box corners
-        local size = Vector3.new(3, 5, 3)
-        local cf = rootPart.CFrame
-        
-        local corners = {
-            cf * CFrame.new(size.X/2, size.Y/2, size.Z/2),
-            cf * CFrame.new(-size.X/2, size.Y/2, size.Z/2),
-            cf * CFrame.new(-size.X/2, size.Y/2, -size.Z/2),
-            cf * CFrame.new(size.X/2, size.Y/2, -size.Z/2),
-            cf * CFrame.new(size.X/2, -size.Y/2, size.Z/2),
-            cf * CFrame.new(-size.X/2, -size.Y/2, size.Z/2),
-            cf * CFrame.new(-size.X/2, -size.Y/2, -size.Z/2),
-            cf * CFrame.new(size.X/2, -size.Y/2, -size.Z/2)
-        }
-        
-        -- Convert to screen points
-        local points = {}
-        for i, corner in ipairs(corners) do
-            local point = Camera:WorldToViewportPoint(corner.Position)
-            points[i] = Vector2.new(point.X, point.Y)
-        end
-        
-        -- Draw 3D box lines
-        local lineConnections = {
-            {1,2}, {2,3}, {3,4}, {4,1}, -- Top square
-            {5,6}, {6,7}, {7,8}, {8,5}, -- Bottom square
-            {1,5}, {2,6}, {3,7}, {4,8}  -- Connecting lines
-        }
-        
-        for i, connection in ipairs(lineConnections) do
-            local line = drawings.lines3D[i]
-            line.From = points[connection[1]]
-            line.To = points[connection[2]]
-            line.Color = ESP.BoxColor
-            line.Thickness = ESP.BoxThickness
-            line.Visible = true
-        end
-    elseif ESP.BoxType == "corner" and ESP.ShowBoxes then
-        -- Corner Box
-        drawings.box.Visible = false
-        drawings.boxOutline.Visible = false
-        
-        -- Hide 3D boxes
-        for _, line in pairs(drawings.lines3D) do
-            line.Visible = false
-        end
-        
-        local cornerSize = boxHeight * 0.2
-        
-        -- Top Left
-        drawings.corners[1].From = boxPos
-        drawings.corners[1].To = Vector2.new(boxPos.X + cornerSize, boxPos.Y)
-        drawings.corners[1].Color = ESP.BoxColor
-        drawings.corners[1].Thickness = ESP.BoxThickness
-        drawings.corners[1].Visible = true
-        
-        drawings.corners[2].From = boxPos
-        drawings.corners[2].To = Vector2.new(boxPos.X, boxPos.Y + cornerSize)
-        drawings.corners[2].Color = ESP.BoxColor
-        drawings.corners[2].Thickness = ESP.BoxThickness
-        drawings.corners[2].Visible = true
-        
-        -- Top Right
-        drawings.corners[3].From = Vector2.new(boxPos.X + boxWidth, boxPos.Y)
-        drawings.corners[3].To = Vector2.new(boxPos.X + boxWidth - cornerSize, boxPos.Y)
-        drawings.corners[3].Color = ESP.BoxColor
-        drawings.corners[3].Thickness = ESP.BoxThickness
-        drawings.corners[3].Visible = true
-        
-        drawings.corners[4].From = Vector2.new(boxPos.X + boxWidth, boxPos.Y)
-        drawings.corners[4].To = Vector2.new(boxPos.X + boxWidth, boxPos.Y + cornerSize)
-        drawings.corners[4].Color = ESP.BoxColor
-        drawings.corners[4].Thickness = ESP.BoxThickness
-        drawings.corners[4].Visible = true
-        
-        -- Bottom Left
-        drawings.corners[5].From = Vector2.new(boxPos.X, boxPos.Y + boxHeight)
-        drawings.corners[5].To = Vector2.new(boxPos.X + cornerSize, boxPos.Y + boxHeight)
-        drawings.corners[5].Color = ESP.BoxColor
-        drawings.corners[5].Thickness = ESP.BoxThickness
-        drawings.corners[5].Visible = true
-        
-        drawings.corners[6].From = Vector2.new(boxPos.X, boxPos.Y + boxHeight)
-        drawings.corners[6].To = Vector2.new(boxPos.X, boxPos.Y + boxHeight - cornerSize)
-        drawings.corners[6].Color = ESP.BoxColor
-        drawings.corners[6].Thickness = ESP.BoxThickness
-        drawings.corners[6].Visible = true
-        
-        -- Bottom Right
-        drawings.corners[7].From = Vector2.new(boxPos.X + boxWidth, boxPos.Y + boxHeight)
-        drawings.corners[7].To = Vector2.new(boxPos.X + boxWidth - cornerSize, boxPos.Y + boxHeight)
-        drawings.corners[7].Color = ESP.BoxColor
-        drawings.corners[7].Thickness = ESP.BoxThickness
-        drawings.corners[7].Visible = true
-        
-        drawings.corners[8].From = Vector2.new(boxPos.X + boxWidth, boxPos.Y + boxHeight)
-        drawings.corners[8].To = Vector2.new(boxPos.X + boxWidth, boxPos.Y + boxHeight - cornerSize)
-        drawings.corners[8].Color = ESP.BoxColor
-        drawings.corners[8].Thickness = ESP.BoxThickness
-        drawings.corners[8].Visible = true
-    else
-        -- Hide all boxes
-        drawings.box.Visible = false
-        drawings.boxOutline.Visible = false
-        
-        for _, line in pairs(drawings.lines3D) do
-            line.Visible = false
-        end
-        
-        for _, line in pairs(drawings.corners) do
-            line.Visible = false
+        if flags.esp_chams then
+            chams.highlight.Enabled = true
+            chams.highlight.FillColor = flags.esp_chams_color.Color
+            chams.highlight.OutlineColor = flags.esp_chams_outline_color.Color
+            chams.highlight.FillTransparency = flags.esp_chams_transparency or 0.5
+            chams.highlight.OutlineTransparency = flags.esp_chams_outline_transparency or 0
+        else
+            chams.highlight.Enabled = false
         end
     end
-    
-    -- Name ESP
-    if ESP.ShowNames then
-        drawings.name.Position = Vector2.new(boxPos.X + boxWidth / 2, boxPos.Y - 15)
-        drawings.name.Text = player.Name
-        drawings.name.Color = ESP.NameColor
-        drawings.name.Size = ESP.TextSize
-        drawings.name.Visible = true
-    else
-        drawings.name.Visible = false
-    end
-    
-    -- Weapon ESP
-    if ESP.ShowWeapon then
-        drawings.weapon.Position = Vector2.new(boxPos.X + boxWidth / 2, boxPos.Y + boxHeight + 5)
-        drawings.weapon.Text = GetEquippedWeapon(player)
-        drawings.weapon.Color = ESP.WeaponColor
-        drawings.weapon.Size = ESP.TextSize
-        drawings.weapon.Visible = true
-    else
-        drawings.weapon.Visible = false
-    end
-    
-    -- Distance ESP
-    if ESP.ShowDistance then
-        drawings.distance.Position = Vector2.new(boxPos.X + boxWidth / 2, boxPos.Y + boxHeight + (ESP.ShowWeapon and 20 or 5))
-        drawings.distance.Text = math.floor(distance) .. "m"
-        drawings.distance.Color = ESP.DistanceColor
-        drawings.distance.Size = ESP.TextSize
-        drawings.distance.Visible = true
-    else
-        drawings.distance.Visible = false
-    end
-    
-    -- Health Bar
-    if ESP.ShowHealthBars and humanoid then
-        local healthPercent = humanoid.Health / humanoid.MaxHealth
-        
-        drawings.healthBarBG.From = Vector2.new(boxPos.X - 5, boxPos.Y)
-        drawings.healthBarBG.To = Vector2.new(boxPos.X - 5, boxPos.Y + boxHeight)
-        drawings.healthBarBG.Visible = true
-        
-        drawings.healthBar.From = Vector2.new(boxPos.X - 5, boxPos.Y + boxHeight - (boxHeight * healthPercent))
-        drawings.healthBar.To = Vector2.new(boxPos.X - 5, boxPos.Y + boxHeight)
-        drawings.healthBar.Color = Color3.fromRGB(255 - 255 * healthPercent, 255 * healthPercent, 0)
-        drawings.healthBar.Visible = true
-    else
-        drawings.healthBar.Visible = false
-        drawings.healthBarBG.Visible = false
-    end
-    
-    -- Armor Bar
-    local armor = GetArmorValue(player)
-    if ESP.ShowArmorBars and (not ESP.ArmoredOnly or armor > 0) then
-        drawings.armorBarBG.From = Vector2.new(boxPos.X - 10, boxPos.Y)
-        drawings.armorBarBG.To = Vector2.new(boxPos.X - 10, boxPos.Y + boxHeight)
-        drawings.armorBarBG.Visible = true
-        
-        drawings.armorBar.From = Vector2.new(boxPos.X - 10, boxPos.Y + boxHeight - (boxHeight * armor))
-        drawings.armorBar.To = Vector2.new(boxPos.X - 10, boxPos.Y + boxHeight)
-        drawings.armorBar.Color = ESP.ArmorBarColor
-        drawings.armorBar.Visible = armor > 0
-    else
-        drawings.armorBar.Visible = false
-        drawings.armorBarBG.Visible = false
-    end
-    
-    -- Tracer
-    if ESP.ShowTracers then
-        local tracerOrigin
-        
-        if ESP.TracerOrigin == "Top" then
-            tracerOrigin = Vector2.new(Camera.ViewportSize.X / 2, 0)
-        elseif ESP.TracerOrigin == "Center" then
-            tracerOrigin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-        elseif ESP.TracerOrigin == "Bottom" then
-            tracerOrigin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-        elseif ESP.TracerOrigin == "Mouse" then
-            local mousePos = UserInputService:GetMouseLocation()
-            tracerOrigin = Vector2.new(mousePos.X, mousePos.Y)
-        end
-        
-        drawings.tracer.From = tracerOrigin
-        drawings.tracer.To = Vector2.new(rootPos.X, rootPos.Y)
-        drawings.tracer.Color = ESP.TracerColor
-        drawings.tracer.Thickness = ESP.TracerThickness
-        drawings.tracer.Visible = true
-    else
-        drawings.tracer.Visible = false
-    end
-    
-    -- Update chams
-    if ESP.Chams[player] then
-        ESP.Chams[player].Enabled = ESP.ShowChams
-        ESP.Chams[player].FillColor = ESP.ChamsColor
-        ESP.Chams[player].FillTransparency = ESP.ChamsTransparency
-    end
-end
-
--- Function to update all ESP
-local function UpdateAllESP()
-    for player, drawings in pairs(ESP.Objects) do
-        UpdateESP(player, drawings)
-    end
-end
+end)
 
 -- Create ESP for existing players
 for _, player in ipairs(Players:GetPlayers()) do
@@ -703,127 +665,66 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 
 -- Create ESP for new players
-Players.PlayerAdded:Connect(function(player)
-    CreateESP(player)
-end)
+Players.PlayerAdded:Connect(CreateESP)
 
 -- Remove ESP when players leave
 Players.PlayerRemoving:Connect(function(player)
-    if ESP.Objects[player] then
-        for _, drawing in pairs(ESP.Objects[player]) do
-            if typeof(drawing) == "table" then
-                for _, line in pairs(drawing) do
-                    line:Remove()
-                end
-            else
-                drawing:Remove()
-            end
-        end
-        ESP.Objects[player] = nil
+    if ESPObjects.Box2D[player] then
+        ESPObjects.Box2D[player].box:Remove()
+        ESPObjects.Box2D[player].outline:Remove()
+        ESPObjects.Box2D[player] = nil
     end
     
-    if ESP.Chams[player] then
-        ESP.Chams[player]:Destroy()
-        ESP.Chams[player] = nil
+    if ESPObjects.Name[player] then
+        ESPObjects.Name[player]:Remove()
+        ESPObjects.Name[player] = nil
+    end
+    
+    if ESPObjects.Distance[player] then
+        ESPObjects.Distance[player]:Remove()
+        ESPObjects.Distance[player] = nil
+    end
+    
+    if ESPObjects.Weapon[player] then
+        ESPObjects.Weapon[player]:Remove()
+        ESPObjects.Weapon[player] = nil
+    end
+    
+    if ESPObjects.Health[player] then
+        ESPObjects.Health[player].bar:Remove()
+        ESPObjects.Health[player].outline:Remove()
+        ESPObjects.Health[player].text:Remove()
+        ESPObjects.Health[player] = nil
+    end
+    
+    if ESPObjects.Armor[player] then
+        ESPObjects.Armor[player].bar:Remove()
+        ESPObjects.Armor[player].outline:Remove()
+        ESPObjects.Armor[player].text:Remove()
+        ESPObjects.Armor[player] = nil
+    end
+    
+    if ESPObjects.Tracer[player] then
+        ESPObjects.Tracer[player]:Remove()
+        ESPObjects.Tracer[player] = nil
+    end
+    
+    if ESPObjects.Corner[player] then
+        for _, line in pairs(ESPObjects.Corner[player]) do
+            line:Remove()
+        end
+        ESPObjects.Corner[player] = nil
+    end
+    
+    if ESPObjects.Box3D[player] then
+        for _, line in pairs(ESPObjects.Box3D[player]) do
+            line:Remove()
+        end
+        ESPObjects.Box3D[player] = nil
+    end
+    
+    if ESPObjects.Chams[player] and ESPObjects.Chams[player].highlight then
+        ESPObjects.Chams[player].highlight:Destroy()
+        ESPObjects.Chams[player] = nil
     end
 end)
-
--- Update ESP every frame
-RunService.RenderStepped:Connect(function()
-    if ESP.Enabled then
-        UpdateAllESP()
-    else
-        -- Hide all ESP objects if disabled
-        for _, playerESP in pairs(ESP.Objects) do
-            for _, drawing in pairs(playerESP) do
-                if typeof(drawing) == "table" then
-                    for _, line in pairs(drawing) do
-                        line.Visible = false
-                    end
-                else
-                    drawing.Visible = false
-                end
-            end
-        end
-        
-        -- Hide all chams if disabled
-        for _, highlight in pairs(ESP.Chams) do
-            highlight.Enabled = false
-        end
-    end
-end)
-
--- Connect to UI flags
-local function ConnectToUI()
-    -- Box settings
-    if flags then
-        ESP.Enabled = true
-        ESP.BoxType = flags.name_type or "2D"
-        ESP.ShowBoxes = flags.esp_box or false
-        ESP.BoxColor = flags.esp_box_color and flags.esp_box_color.Color or Color3.fromRGB(255, 255, 255)
-        
-        -- Name settings
-        ESP.ShowNames = flags.esp_name or false
-        ESP.NameColor = flags.esp_name_color and flags.esp_name_color.Color or Color3.fromRGB(255, 255, 255)
-        
-        -- Weapon settings
-        ESP.ShowWeapon = flags.esp_weapon or false
-        ESP.WeaponColor = flags.esp_weapon_color and flags.esp_weapon_color.Color or Color3.fromRGB(255, 255, 255)
-        
-        -- Distance settings
-        ESP.ShowDistance = flags.esp_distance or false
-        ESP.DistanceColor = flags.esp_distance_color and flags.esp_distance_color.Color or Color3.fromRGB(255, 255, 255)
-        
-        -- Health settings
-        ESP.ShowHealthBars = flags.esp_healthbar or false
-        
-        -- Armor settings
-        ESP.ShowArmorBars = flags.esp_armor or false
-        ESP.ArmorBarColor = flags.esp_armor_color and flags.esp_armor_color.Color or Color3.fromRGB(0, 170, 255)
-        ESP.ArmoredOnly = flags.esp_armored_only or false
-        
-        -- Chams settings
-        ESP.ShowChams = flags.esp_chams or false
-        ESP.ChamsColor = flags.esp_chams_color and flags.esp_chams_color.Color or Color3.fromRGB(255, 255, 255)
-        
-        -- Tracer settings
-        ESP.ShowTracers = flags.esp_tracer_lines or false
-        ESP.TracerColor = flags.esp_tracer_lines_color and flags.esp_tracer_lines_color.Color or Color3.fromRGB(255, 255, 255)
-        
-        -- Disable tracers if flag is set
-        if flags.disable_tracers then
-            ESP.ShowTracers = false
-        end
-    end
-end
-
--- Initial connection to UI
-ConnectToUI()
-
--- Update settings when flags change
-if flags then
-    -- Create a metatable to detect changes in flags
-    local mt = getmetatable(flags) or {}
-    local oldIndex = mt.__index
-    local oldNewIndex = mt.__newindex
-    
-    mt.__index = function(t, k)
-        return oldIndex and oldIndex(t, k) or rawget(t, k)
-    end
-    
-    mt.__newindex = function(t, k, v)
-        rawset(t, k, v)
-        
-        -- Update ESP settings when flags change
-        ConnectToUI()
-        
-        if oldNewIndex then
-            oldNewIndex(t, k, v)
-        end
-    end
-    
-    setmetatable(flags, mt)
-end
-
--- Return the ESP object for external use
-return ESP
