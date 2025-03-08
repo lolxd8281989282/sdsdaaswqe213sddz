@@ -73,10 +73,8 @@ local function GetTeam(player)
 end
 
 local function IsTeammate(player)
-    if not flags.esp_teammates then
-        return GetTeam(player) == GetTeam(LocalPlayer)
-    end
-    return false
+    -- Simple team check - can be customized based on your game
+    return GetTeam(player) == GetTeam(LocalPlayer)
 end
 
 local function GetBoxCorners(player)
@@ -289,6 +287,7 @@ end
 
 -- Update ESP
 RunService.RenderStepped:Connect(function()
+    -- Update 2D Box ESP
     for player, objects in pairs(ESPObjects.Box2D) do
         if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or IsTeammate(player) then
             objects.box.Visible = false
@@ -296,13 +295,13 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Only show if ESP is enabled and box type is "2D"
-        if flags.esp_box and flags.box_type == "2D" then
+        -- Only show if box is enabled and box type is "2D"
+        if flags.box and flags.box_type == "2D" then
             local corners = GetBoxCorners(player)
             if corners then
                 objects.box.Size = corners.Size
                 objects.box.Position = corners.TopLeft
-                objects.box.Color = flags.esp_box_color.Color
+                objects.box.Color = flags.box_color or Color3.new(1, 1, 1)
                 objects.box.Visible = true
                 
                 objects.outline.Size = corners.Size
@@ -326,12 +325,12 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_name then
+        if flags.name then
             local corners = GetBoxCorners(player)
             if corners then
                 name.Position = Vector2.new(corners.TopLeft.X + corners.Size.X / 2, corners.TopLeft.Y - 15)
                 name.Text = player.Name
-                name.Color = flags.esp_name_color.Color
+                name.Color = flags.name_color or Color3.new(1, 1, 1)
                 name.Visible = true
             else
                 name.Visible = false
@@ -348,13 +347,13 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_distance then
+        if flags.distance then
             local corners = GetBoxCorners(player)
             if corners then
                 local dist = math.floor(GetDistanceFromPlayer(player))
                 distance.Position = Vector2.new(corners.BottomRight.X + 5, corners.BottomRight.Y)
                 distance.Text = tostring(dist) .. "m"
-                distance.Color = flags.esp_distance_color.Color
+                distance.Color = flags.distance_color or Color3.new(1, 1, 1)
                 distance.Visible = true
             else
                 distance.Visible = false
@@ -371,12 +370,12 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_weapon then
+        if flags.weapon then
             local corners = GetBoxCorners(player)
             if corners then
                 weapon.Position = Vector2.new(corners.BottomLeft.X + corners.Size.X / 2, corners.BottomLeft.Y + 15)
                 weapon.Text = GetPlayerWeapon(player)
-                weapon.Color = flags.esp_weapon_color.Color
+                weapon.Color = flags.weapon_color or Color3.new(1, 1, 1)
                 weapon.Visible = true
             else
                 weapon.Visible = false
@@ -395,7 +394,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_healthbar then
+        if flags.healthbar then
             local corners = GetBoxCorners(player)
             if corners then
                 local currentHealth, maxHealth = GetPlayerHealth(player)
@@ -416,7 +415,8 @@ RunService.RenderStepped:Connect(function()
                 health.bar.Color = Color3.new(1 - healthPercentage, healthPercentage, 0)
                 health.bar.Visible = true
                 
-                if flags.esp_healthtext then
+                -- Only show health text if enabled
+                if flags.healthtext then
                     health.text.Text = tostring(math.floor(currentHealth))
                     health.text.Position = Vector2.new(corners.TopLeft.X - barWidth - 16, corners.TopLeft.Y + barHeight * (1 - healthPercentage))
                     health.text.Color = Color3.new(1, 1, 1)
@@ -445,7 +445,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_armor and (not flags.esp_armored_only or IsPlayerArmored(player)) then
+        if flags.armor and (not flags.armored_only or IsPlayerArmored(player)) then
             local corners = GetBoxCorners(player)
             if corners then
                 local armorValue = GetPlayerArmor(player)
@@ -464,10 +464,15 @@ RunService.RenderStepped:Connect(function()
                 armor.bar.Color = Color3.new(0, 0.5, 1) -- Blue for armor
                 armor.bar.Visible = true
                 
-                armor.text.Text = tostring(math.floor(armorValue))
-                armor.text.Position = Vector2.new(corners.TopRight.X + barWidth + 5, corners.TopRight.Y + barHeight * (1 - armorPercentage))
-                armor.text.Color = Color3.new(1, 1, 1)
-                armor.text.Visible = flags.esp_armortext
+                -- Only show armor text if enabled
+                if flags.armortext then
+                    armor.text.Text = tostring(math.floor(armorValue))
+                    armor.text.Position = Vector2.new(corners.TopRight.X + barWidth + 5, corners.TopRight.Y + barHeight * (1 - armorPercentage))
+                    armor.text.Color = Color3.new(1, 1, 1)
+                    armor.text.Visible = true
+                else
+                    armor.text.Visible = false
+                end
             else
                 armor.bar.Visible = false
                 armor.outline.Visible = false
@@ -487,12 +492,13 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_tracer then
+        if flags.tracer then
             local rootPart = player.Character.HumanoidRootPart
             local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
             
             if onScreen then
                 local tracerStart
+                -- Use the selected tracer origin from your UI
                 if flags.tracer_origin == "bottom" then
                     tracerStart = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                 elseif flags.tracer_origin == "top" then
@@ -500,12 +506,13 @@ RunService.RenderStepped:Connect(function()
                 elseif flags.tracer_origin == "center" then
                     tracerStart = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
                 else
+                    -- Default to bottom if not specified
                     tracerStart = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                 end
                 
                 tracer.From = tracerStart
                 tracer.To = Vector2.new(rootPos.X, rootPos.Y)
-                tracer.Color = flags.esp_tracer_color.Color
+                tracer.Color = flags.tracer_color or Color3.new(1, 1, 1)
                 tracer.Visible = true
             else
                 tracer.Visible = false
@@ -524,15 +531,15 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Only show if ESP is enabled and box type is "corner"
-        if flags.esp_box and flags.box_type == "corner" then
+        -- Only show if box is enabled and box type is "corner"
+        if flags.box and flags.box_type == "corner" then
             local boxCorners = GetBoxCorners(player)
             if boxCorners then
                 local cornerSize = boxCorners.Size.Y * 0.2
                 
                 -- Update corner lines
                 for i, line in ipairs(corners) do
-                    line.Color = flags.esp_box_color.Color
+                    line.Color = flags.box_color or Color3.new(1, 1, 1)
                     line.Visible = true
                     
                     -- Set corner positions based on index
@@ -583,8 +590,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Only show if ESP is enabled and box type is "3D"
-        if flags.esp_box and flags.box_type == "3D" then
+        -- Only show if box is enabled and box type is "3D"
+        if flags.box and flags.box_type == "3D" then
             local rootPart = player.Character.HumanoidRootPart
             local size = Vector3.new(4, 5, 4)
             local cf = rootPart.CFrame
@@ -623,7 +630,7 @@ RunService.RenderStepped:Connect(function()
                     local line = lines[i]
                     line.From = points[connection[1]]
                     line.To = points[connection[2]]
-                    line.Color = flags.esp_box_color.Color
+                    line.Color = flags.box_color or Color3.new(1, 1, 1)
                     line.Visible = true
                 end
             else
@@ -645,12 +652,12 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if flags.esp_chams then
+        if flags.chams then
             chams.highlight.Enabled = true
-            chams.highlight.FillColor = flags.esp_chams_color.Color
-            chams.highlight.OutlineColor = flags.esp_chams_outline_color.Color
-            chams.highlight.FillTransparency = flags.esp_chams_transparency or 0.5
-            chams.highlight.OutlineTransparency = flags.esp_chams_outline_transparency or 0
+            chams.highlight.FillColor = flags.chams_color or Color3.new(1, 0, 0)
+            chams.highlight.OutlineColor = flags.chams_outline_color or Color3.new(1, 1, 1)
+            chams.highlight.FillTransparency = flags.chams_transparency or 0.5
+            chams.highlight.OutlineTransparency = flags.chams_outline_transparency or 0
         else
             chams.highlight.Enabled = false
         end
