@@ -7,40 +7,60 @@ local LocalPlayer = Players.LocalPlayer
 
 -- ESP Object
 local ESP = {
-    Enabled = true,
+    Enabled = false, -- Set to false by default
     Objects = {},
     Distance = 1000,
     TeamCheck = false,
     SelfESP = false,
-    ShowBoxes = true,
+    
+    -- Properties that match the UI
+    Boxes = false,
     BoxColor = Color3.fromRGB(255, 255, 255),
-    BoxThickness = 1,
-    ShowNames = true,
+    Names = false,
     NameColor = Color3.fromRGB(255, 255, 255),
-    TextSize = 12,
-    ShowHealthBars = true,
-    ShowArmorBars = true,
-    ArmorBarColor = Color3.fromRGB(0, 150, 255), -- Blue color for armor
-    ShowDistance = true,
+    Distance = false, -- This is now a boolean for the toggle
     DistanceColor = Color3.fromRGB(255, 255, 255),
-    ShowEquippedItem = true, -- New setting for equipped item ESP
-    EquippedItemColor = Color3.fromRGB(255, 255, 255), -- White color for equipped items
+    Weapons = false,
+    WeaponColor = Color3.fromRGB(255, 255, 255),
+    Tracers = false,
+    TracerColor = Color3.fromRGB(255, 255, 255),
+    HealthBars = false,
+    ArmorBars = false,
+    ArmorColor = Color3.fromRGB(0, 150, 255),
+    ArmoredOnly = false,
+    Chams = false,
+    ChamsColor = Color3.fromRGB(255, 255, 255),
+    BoxType = "2D", -- For the dropdown
+    DisableTracers = false,
+    TracerType = "random",
+    
+    -- Original properties (renamed to avoid conflicts)
+    ShowBoxes = false,
+    BoxThickness = 1,
+    ShowNames = false,
+    TextSize = 12,
+    ShowHealthBars = false,
+    ShowArmorBars = false,
+    ArmorBarColor = Color3.fromRGB(0, 150, 255),
+    ShowDistance = false,
+    DistanceValue = 1000, -- Renamed from Distance to avoid conflict
+    ShowEquippedItem = false,
+    EquippedItemColor = Color3.fromRGB(255, 255, 255),
     
     -- Tracer settings
-    ShowTracers = true,
-    TracerColor = Color3.fromRGB(255, 255, 255),
+    ShowTracers = false,
     TracerThickness = 1,
-    TracerOrigin = "Top", -- Can be "Top", "Center", "Bottom", "Mouse"
+    TracerOrigin = "Top",
     TracerTransparency = 0,
     
     -- Chams settings
-    ShowChams = true,
-    ChamsVisible = Color3.fromRGB(0, 255, 0),    -- Color for visible parts
-    ChamsOccluded = Color3.fromRGB(255, 0, 0),   -- Color for parts behind walls
-    ChamsTransparency = 0.5,                     -- Transparency of chams (0-1)
-    ChamsOutlineTransparency = 0.3,              -- Transparency of outline (0-1)
-    ChamsOutlineColor = Color3.fromRGB(0, 0, 0), -- Color of outline
-    ChamsTeamColor = false,                      -- Use team color for chams
+    ShowChams = false,
+    ChamsVisible = Color3.fromRGB(0, 255, 0),
+    ChamsOccluded = Color3.fromRGB(255, 0, 0),
+    ChamsTransparency = 0.5,
+    ChamsOutlineTransparency = 0.3,
+    ChamsOutlineColor = Color3.fromRGB(0, 0, 0),
+    ChamsTeamColor = false,
     
     -- 3D Box settings
     Show3DBoxes = false,
@@ -55,7 +75,7 @@ local ESP = {
     CornerThickness = 1,
     CornerOutlineColor = Color3.fromRGB(0, 0, 0),
     CornerOutlineThickness = 3,
-    CornerSize = 5, -- Length of each corner segment
+    CornerSize = 5,
     
     -- Storage for objects
     Chams = {},
@@ -383,7 +403,7 @@ end
 
 -- Function to update chams for a player
 local function UpdateChams(player)
-    if not ESP.ShowChams or not ESP.Enabled then
+    if not ESP.Chams or not ESP.Enabled then
         if ESP.Chams[player] then
             ESP.Chams[player].Enabled = false
         end
@@ -432,7 +452,7 @@ local function UpdateChams(player)
         if not ESP.SelfESP and player == LocalPlayer then
             shouldShow = false
         end
-        if distance > ESP.Distance then
+        if distance > ESP.DistanceValue then
             shouldShow = false
         end
         
@@ -603,7 +623,7 @@ local function Update3DBox(player)
     end
     
     -- Check if player is within distance
-    if distance > ESP.Distance then
+    if distance > ESP.DistanceValue then
         for i = 1, 12 do
             lines[i].Visible = false
             outlines[i].Visible = false
@@ -724,7 +744,7 @@ local function UpdateCornerESP(player)
     end
     
     -- Check if player is within distance
-    if distance > ESP.Distance then
+    if distance > ESP.DistanceValue then
         for i = 1, 8 do
             lines[i].Visible = false
             outlines[i].Visible = false
@@ -857,7 +877,7 @@ local function CreateESP(player)
     -- Armor bar
     drawings.armorBar = Drawing.new("Line")
     drawings.armorBar.Visible = false
-    drawings.armorBar.Color = ESP.ArmorBarColor
+    drawings.armorBar.Color = ESP.ArmorColor
     drawings.armorBar.Thickness = 1
     
     -- Health bar background
@@ -1014,7 +1034,7 @@ local function UpdateESP()
         local bottomPos = Camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
         
         -- Check if player is on screen and within distance
-        if rootVisible and distance <= ESP.Distance then
+        if rootVisible and distance <= ESP.DistanceValue then
             -- Calculate box dimensions
             local boxHeight = math.abs(headPos.Y - bottomPos.Y)
             local boxWidth = boxHeight / 2
@@ -1029,7 +1049,7 @@ local function UpdateESP()
             end
             
             -- Draw box
-            if shouldShow and ESP.ShowBoxes then
+            if shouldShow and ESP.Boxes then
                 local boxPosition = Vector2.new(
                     rootPos.X - boxWidth / 2,
                     headPos.Y
@@ -1054,7 +1074,7 @@ local function UpdateESP()
             local boxY = headPos.Y
 
             -- Draw name (above box)
-            if shouldShow and ESP.ShowNames then
+            if shouldShow and ESP.Names then
                 drawings.name.Position = Vector2.new(rootPos.X, boxY - 20) -- Moved up slightly
                 drawings.name.Text = player.Name
                 drawings.name.Color = ESP.NameColor
@@ -1069,7 +1089,7 @@ local function UpdateESP()
             local armorBarX = healthBarX - 4 -- Moved closer to health bar
             
             -- Draw armor bar (to the left of health bar)
-            if shouldShow and ESP.ShowArmorBars then
+            if shouldShow and ESP.ArmorBars then
                 local armorPercent = GetArmorValue(player)
                 local barHeight = boxHeight * armorPercent
                 
@@ -1087,7 +1107,7 @@ local function UpdateESP()
                 if armorPercent > 0 then
                     drawings.armorBar.From = Vector2.new(armorBarX, boxY + boxHeight - barHeight)
                     drawings.armorBar.To = Vector2.new(armorBarX, boxY + boxHeight)
-                    drawings.armorBar.Color = ESP.ArmorBarColor
+                    drawings.armorBar.Color = ESP.ArmorColor
                     drawings.armorBar.Visible = true
                 else
                     drawings.armorBar.Visible = false
@@ -1099,7 +1119,7 @@ local function UpdateESP()
             end
             
             -- Draw health bar
-            if shouldShow and ESP.ShowHealthBars and humanoid then
+            if shouldShow and ESP.HealthBars and humanoid then
                 local healthPercent = humanoid.Health / humanoid.MaxHealth
                 local barHeight = boxHeight * healthPercent
                 
@@ -1123,7 +1143,7 @@ local function UpdateESP()
             end
             
             -- Draw distance
-            if shouldShow and ESP.ShowDistance then
+            if shouldShow and ESP.Distance then
                 drawings.distance.Position = Vector2.new(rootPos.X, boxY + boxHeight + 5)
                 drawings.distance.Text = math.floor(distance) .. "m"
                 drawings.distance.Color = ESP.DistanceColor
@@ -1134,7 +1154,7 @@ local function UpdateESP()
             end
             
             -- Draw equipped item
-            if shouldShow and ESP.ShowEquippedItem then
+            if shouldShow and ESP.Weapons then
                 local itemName = GetEquippedItem(player)
                 -- Position under distance text with minimal spacing
                 drawings.equippedItem.Position = Vector2.new(rootPos.X, boxY + boxHeight + 20)
@@ -1146,7 +1166,7 @@ local function UpdateESP()
                     drawings.equippedItem.Text = itemName
                 end
                 
-                drawings.equippedItem.Color = ESP.EquippedItemColor
+                drawings.equippedItem.Color = ESP.WeaponColor
                 drawings.equippedItem.Size = ESP.TextSize
                 drawings.equippedItem.Visible = true
             else
@@ -1154,7 +1174,7 @@ local function UpdateESP()
             end
             
             -- Draw tracer
-            if shouldShow and ESP.ShowTracers then
+            if shouldShow and ESP.Tracers then
                 local tracerOrigin
                 
                 -- Set tracer origin based on setting
@@ -1198,6 +1218,19 @@ end
 
 -- Function to initialize ESP
 function ESP:Init()
+    -- Initialize properties for UI compatibility
+    self.Enabled = false
+    self.Boxes = false
+    self.Names = false
+    self.Distance = false
+    self.Weapons = false
+    self.HealthBars = false
+    self.ArmorBars = false
+    self.ArmoredOnly = false
+    self.Chams = false
+    self.Tracers = false
+    self.BoxType = "2D"
+    
     -- Create ESP for existing players
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer or self.SelfESP then
@@ -1309,7 +1342,7 @@ function ESP:UpdateSettings(settings)
         
         if playerESP.equippedItem then
             playerESP.equippedItem.Size = self.TextSize
-            playerESP.equippedItem.Color = self.EquippedItemColor
+            playerESP.equippedItem.Color = self.WeaponColor
         end
         
         if playerESP.box then
@@ -1322,7 +1355,7 @@ function ESP:UpdateSettings(settings)
         end
         
         if playerESP.armorBar then
-            playerESP.armorBar.Color = self.ArmorBarColor
+            playerESP.armorBar.Color = self.ArmorColor
         end
         
         if playerESP.tracer then
@@ -1453,6 +1486,7 @@ end
 
 -- Function to toggle chams
 function ESP:ToggleChams(enabled)
+    self.Chams = enabled
     self.ShowChams = enabled
     
     -- Update all chams
@@ -1464,12 +1498,24 @@ end
 -- Function to toggle 3D boxes
 function ESP:Toggle3DBoxes(enabled)
     self.Show3DBoxes = enabled
+    
+    -- Update box type based on selection
+    if enabled then
+        self.BoxType = "3D"
+        self.ShowCornerBoxes = false
+    end
 end
 
 -- Function to toggle corner ESP
 function ESP:ToggleCornerBoxes(enabled)
     self.ShowCornerBoxes = enabled
-end
+    
+    -- Update box type based on selection
+    if enabled then
+        self.BoxType = "corner"
+        self.Show3DBoxes = false
+    end
+}
 
 -- Function to update chams colors
 function ESP:UpdateChamsColors(visible, occluded, outline)
