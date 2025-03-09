@@ -2998,7 +2998,7 @@ exploits:toggle({name = "aug", flag = "aug_enabled"})
 exploits:toggle({name = "gun", flag = "gun_enabled"})
 
 -- Load ESP module (add this at the beginning of your script)
-local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-esp-url/esp.lua"))()
+local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/lolxd8281989282/sdsdaaswqe213sddz/refs/heads/main/esp.lua"))()
 ESP:Init()
 
 -- visuals tab
