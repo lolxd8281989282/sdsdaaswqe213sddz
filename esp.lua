@@ -7,13 +7,20 @@ local LocalPlayer = Players.LocalPlayer
 
 -- ESP Object
 local ESP = {
-    Enabled = false,
+    -- Initialize storage tables first
     Objects = {},
-    DistanceValue = 1000, -- Renamed from Distance to avoid conflict
+    ChamsInstances = {},
+    Boxes3D = {},
+    Corners = {},
+    Initialized = false,
+    
+    -- Then initialize all settings
+    Enabled = false,
+    DistanceValue = 1000,
     TeamCheck = false,
     SelfESP = false,
     
-    -- Properties that match the UI
+    -- UI Properties
     Boxes = false,
     BoxColor = Color3.fromRGB(255, 255, 255),
     Names = false,
@@ -28,29 +35,15 @@ local ESP = {
     ArmorBars = false,
     ArmorColor = Color3.fromRGB(0, 150, 255),
     ArmoredOnly = false,
-    ShowChams = false, -- Boolean toggle for chams
+    ShowChams = false,
     ChamsColor = Color3.fromRGB(255, 255, 255),
     BoxType = "2D",
     DisableTracers = false,
     TracerType = "random",
     
-    -- Original properties (renamed to avoid conflicts)
-    ShowBoxes = false,
+    -- Drawing settings
     BoxThickness = 1,
-    ShowNames = false,
     TextSize = 12,
-    ShowHealthBars = false,
-    ShowArmorBars = false,
-    ArmorBarColor = Color3.fromRGB(0, 150, 255),
-    ShowDistance = false,
-    ShowEquippedItem = false,
-    EquippedItemColor = Color3.fromRGB(255, 255, 255),
-    
-    -- Tracer settings
-    ShowTracers = false,
-    TracerThickness = 1,
-    TracerOrigin = "Top",
-    TracerTransparency = 0,
     
     -- Chams settings
     ChamsVisible = Color3.fromRGB(0, 255, 0),
@@ -75,10 +68,10 @@ local ESP = {
     CornerOutlineThickness = 3,
     CornerSize = 5,
     
-    -- Storage for objects
-    ChamsInstances = {}, -- Changed from Chams to ChamsInstances
-    Boxes3D = {},
-    Corners = {}
+    -- Tracer settings
+    TracerThickness = 1,
+    TracerOrigin = "Top",
+    TracerTransparency = 0
 }
 
 -- Function to get armor value from a player (works with different games)
@@ -825,6 +818,10 @@ local function UpdateCornerESP(player)
     lines[8].Color = cornerColor
     lines[8].Visible = true
     
+    --  -ESP.CornerSize)
+    lines[8].Color = cornerColor
+    lines[8].Visible = true
+    
     -- Update outlines
     for i = 1, 8 do
         outlines[i].From = lines[i].From
@@ -1216,6 +1213,11 @@ end
 
 -- Function to initialize ESP
 function ESP:Init()
+    -- Check if already initialized
+    if self.Initialized then
+        return self
+    end
+    
     -- Initialize properties for UI compatibility
     self.Enabled = false
     self.Boxes = false
@@ -1314,6 +1316,9 @@ function ESP:Init()
             end
         end
     end)
+    
+    -- Mark as initialized
+    self.Initialized = true
     
     return self
 end
