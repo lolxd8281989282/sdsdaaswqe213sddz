@@ -18,36 +18,6 @@ local ESPObjects = {
     Chams = {}
 }
 
--- Helper function to get flag values (works with any flag storage method)
-local function GetFlag(name)
-    -- Try different possible storage methods
-    if library and library[name] ~= nil then
-        return library[name]
-    elseif flags and flags[name] ~= nil then
-        return flags[name]
-    elseif getgenv()[name] ~= nil then
-        return getgenv()[name]
-    elseif _G[name] ~= nil then
-        return _G[name]
-    end
-    return false -- Default value if flag not found
-end
-
--- Helper function to get color values
-local function GetColor(name)
-    -- Try different possible storage methods for colors
-    if library and library.colors and library.colors[name] then
-        return library.colors[name]
-    elseif flags and flags[name] then
-        return flags[name]
-    elseif getgenv()[name] ~= nil then
-        return getgenv()[name]
-    elseif _G[name] ~= nil then
-        return _G[name]
-    end
-    return Color3.fromRGB(255, 255, 255) -- Default white color
-end
-
 -- Utility functions
 local function GetPlayerWeapon(player)
     if player and player.Character then
@@ -267,15 +237,12 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Try both "box type" and "name_type" for box type
-        local boxType = GetFlag("box type") or GetFlag("name_type")
-        
-        if GetFlag("esp_box") and boxType == "2D" then
+        if flags.esp_box and flags.name_type == "2D" then
             local corners = GetBoxCorners(player)
             if corners then
                 objects.box.Size = corners.Size
                 objects.box.Position = corners.TopLeft
-                objects.box.Color = GetColor("esp_box_color")
+                objects.box.Color = flags.esp_box_color
                 objects.box.Visible = true
                 
                 objects.outline.Size = corners.Size
@@ -299,12 +266,12 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_name") then
+        if flags.esp_name then
             local corners = GetBoxCorners(player)
             if corners then
                 name.Position = Vector2.new(corners.TopLeft.X + corners.Size.X / 2, corners.TopLeft.Y - 15)
                 name.Text = player.Name
-                name.Color = GetColor("esp_name_color")
+                name.Color = flags.esp_name_color
                 name.Visible = true
             else
                 name.Visible = false
@@ -321,13 +288,13 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_distance") then
+        if flags.esp_distance then
             local corners = GetBoxCorners(player)
             if corners then
                 local dist = math.floor(GetDistanceFromPlayer(player))
                 distance.Position = Vector2.new(corners.BottomRight.X + 5, corners.BottomRight.Y)
                 distance.Text = tostring(dist) .. "m"
-                distance.Color = GetColor("esp_distance_color")
+                distance.Color = flags.esp_distance_color
                 distance.Visible = true
             else
                 distance.Visible = false
@@ -344,12 +311,12 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_weapon") then
+        if flags.esp_weapon then
             local corners = GetBoxCorners(player)
             if corners then
                 weapon.Position = Vector2.new(corners.BottomLeft.X + corners.Size.X / 2, corners.BottomLeft.Y + 15)
                 weapon.Text = GetPlayerWeapon(player)
-                weapon.Color = GetColor("esp_weapon_color")
+                weapon.Color = flags.esp_weapon_color
                 weapon.Visible = true
             else
                 weapon.Visible = false
@@ -368,7 +335,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_healthbar") then
+        if flags.esp_healthbar then
             local corners = GetBoxCorners(player)
             if corners then
                 local currentHealth, maxHealth = GetPlayerHealth(player)
@@ -412,7 +379,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_armor") and (not GetFlag("esp_armored_only") or IsPlayerArmored(player)) then
+        if flags.esp_armor and (not flags.esp_armored_only or IsPlayerArmored(player)) then
             local corners = GetBoxCorners(player)
             if corners then
                 local armorValue = GetPlayerArmor(player)
@@ -428,7 +395,7 @@ RunService.RenderStepped:Connect(function()
                 
                 armor.bar.Size = Vector2.new(barWidth, barHeight * armorPercentage)
                 armor.bar.Position = Vector2.new(corners.TopRight.X + 3, corners.TopRight.Y + barHeight * (1 - armorPercentage))
-                armor.bar.Color = GetColor("esp_armor_color")
+                armor.bar.Color = flags.esp_armor_color
                 armor.bar.Visible = true
                 
                 armor.text.Text = tostring(math.floor(armorValue))
@@ -454,7 +421,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_tracer_lines") and not GetFlag("disable_tracers") then
+        if flags.esp_tracer_lines and not flags.disable_tracers then
             local rootPart = player.Character.HumanoidRootPart
             local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
             
@@ -463,7 +430,7 @@ RunService.RenderStepped:Connect(function()
                 
                 tracer.From = tracerStart
                 tracer.To = Vector2.new(rootPos.X, rootPos.Y)
-                tracer.Color = GetColor("esp_tracer_lines_color")
+                tracer.Color = flags.esp_tracer_lines_color
                 tracer.Visible = true
             else
                 tracer.Visible = false
@@ -482,16 +449,13 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Try both "box type" and "name_type" for box type
-        local boxType = GetFlag("box type") or GetFlag("name_type")
-        
-        if GetFlag("esp_box") and boxType == "corner" then
+        if flags.esp_box and flags.name_type == "corner" then
             local boxCorners = GetBoxCorners(player)
             if boxCorners then
                 local cornerSize = boxCorners.Size.Y * 0.2
                 
                 for i, line in ipairs(corners) do
-                    line.Color = GetColor("esp_box_color")
+                    line.Color = flags.esp_box_color
                     line.Visible = true
                     
                     if i == 1 then -- Top Left Horizontal
@@ -541,10 +505,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Try both "box type" and "name_type" for box type
-        local boxType = GetFlag("box type") or GetFlag("name_type")
-        
-        if GetFlag("esp_box") and boxType == "3D" then
+        if flags.esp_box and flags.name_type == "3D" then
             local rootPart = player.Character.HumanoidRootPart
             local size = Vector3.new(4, 5, 4)
             local cf = rootPart.CFrame
@@ -583,7 +544,7 @@ RunService.RenderStepped:Connect(function()
                     local line = lines[i]
                     line.From = points[connection[1]]
                     line.To = points[connection[2]]
-                    line.Color = GetColor("esp_box_color")
+                    line.Color = flags.esp_box_color
                     line.Visible = true
                 end
             else
@@ -605,10 +566,10 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if GetFlag("esp_chams") then
+        if flags.esp_chams then
             chams.highlight.Enabled = true
-            chams.highlight.FillColor = GetColor("esp_chams_color")
-            chams.highlight.OutlineColor = GetColor("esp_chams_color")
+            chams.highlight.FillColor = flags.esp_chams_color
+            chams.highlight.OutlineColor = flags.esp_chams_color
             chams.highlight.FillTransparency = 0.5
             chams.highlight.OutlineTransparency = 0
         else
