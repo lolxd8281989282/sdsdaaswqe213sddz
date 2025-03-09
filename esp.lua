@@ -7,9 +7,9 @@ local LocalPlayer = Players.LocalPlayer
 
 -- ESP Object
 local ESP = {
-    Enabled = false, -- Set to false by default
+    Enabled = false,
     Objects = {},
-    Distance = 1000,
+    DistanceValue = 1000, -- Renamed from Distance to avoid conflict
     TeamCheck = false,
     SelfESP = false,
     
@@ -18,7 +18,7 @@ local ESP = {
     BoxColor = Color3.fromRGB(255, 255, 255),
     Names = false,
     NameColor = Color3.fromRGB(255, 255, 255),
-    Distance = false, -- This is now a boolean for the toggle
+    Distance = false,
     DistanceColor = Color3.fromRGB(255, 255, 255),
     Weapons = false,
     WeaponColor = Color3.fromRGB(255, 255, 255),
@@ -28,9 +28,9 @@ local ESP = {
     ArmorBars = false,
     ArmorColor = Color3.fromRGB(0, 150, 255),
     ArmoredOnly = false,
-    Chams = false,
+    ShowChams = false, -- Boolean toggle for chams
     ChamsColor = Color3.fromRGB(255, 255, 255),
-    BoxType = "2D", -- For the dropdown
+    BoxType = "2D",
     DisableTracers = false,
     TracerType = "random",
     
@@ -43,7 +43,6 @@ local ESP = {
     ShowArmorBars = false,
     ArmorBarColor = Color3.fromRGB(0, 150, 255),
     ShowDistance = false,
-    DistanceValue = 1000, -- Renamed from Distance to avoid conflict
     ShowEquippedItem = false,
     EquippedItemColor = Color3.fromRGB(255, 255, 255),
     
@@ -54,7 +53,6 @@ local ESP = {
     TracerTransparency = 0,
     
     -- Chams settings
-    ShowChams = false,
     ChamsVisible = Color3.fromRGB(0, 255, 0),
     ChamsOccluded = Color3.fromRGB(255, 0, 0),
     ChamsTransparency = 0.5,
@@ -78,7 +76,7 @@ local ESP = {
     CornerSize = 5,
     
     -- Storage for objects
-    Chams = {},
+    ChamsInstances = {}, -- Changed from Chams to ChamsInstances
     Boxes3D = {},
     Corners = {}
 }
@@ -375,9 +373,9 @@ local function CreateChams(player)
     if player == LocalPlayer and not ESP.SelfESP then return end
     
     -- Remove existing chams if any
-    if ESP.Chams[player] then
-        ESP.Chams[player]:Destroy()
-        ESP.Chams[player] = nil
+    if ESP.ChamsInstances[player] then
+        ESP.ChamsInstances[player]:Destroy()
+        ESP.ChamsInstances[player] = nil
     end
     
     -- Create new chams if character exists
@@ -397,45 +395,45 @@ local function CreateChams(player)
             highlight.FillColor = player.Team.TeamColor.Color
         end
         
-        ESP.Chams[player] = highlight
+        ESP.ChamsInstances[player] = highlight
     end
 end
 
 -- Function to update chams for a player
 local function UpdateChams(player)
-    if not ESP.Chams or not ESP.Enabled then
-        if ESP.Chams[player] then
-            ESP.Chams[player].Enabled = false
+    if not ESP.ShowChams or not ESP.Enabled then
+        if ESP.ChamsInstances[player] then
+            ESP.ChamsInstances[player].Enabled = false
         end
         return
     end
     
     -- Check if player is valid
     if not player or not player.Parent then
-        if ESP.Chams[player] then
-            ESP.Chams[player]:Destroy()
-            ESP.Chams[player] = nil
+        if ESP.ChamsInstances[player] then
+            ESP.ChamsInstances[player]:Destroy()
+            ESP.ChamsInstances[player] = nil
         end
         return
     end
     
     -- Check if character exists
     if not player.Character then
-        if ESP.Chams[player] then
-            ESP.Chams[player]:Destroy()
-            ESP.Chams[player] = nil
+        if ESP.ChamsInstances[player] then
+            ESP.ChamsInstances[player]:Destroy()
+            ESP.ChamsInstances[player] = nil
         end
         return
     end
     
     -- Create chams if they don't exist
-    if not ESP.Chams[player] then
+    if not ESP.ChamsInstances[player] then
         CreateChams(player)
     end
     
     -- Update chams if they exist
-    if ESP.Chams[player] then
-        local highlight = ESP.Chams[player]
+    if ESP.ChamsInstances[player] then
+        local highlight = ESP.ChamsInstances[player]
         
         -- Calculate distance
         local distance = 0
@@ -925,7 +923,7 @@ local function CreateESP(player)
     drawings.equippedItem.Center = true
     drawings.equippedItem.Outline = true
     drawings.equippedItem.Size = ESP.TextSize
-    drawings.equippedItem.Color = ESP.EquippedItemColor
+    drawings.equippedItem.Color = ESP.WeaponColor
     drawings.equippedItem.Font = 3
     
     -- Tracer line
@@ -957,9 +955,9 @@ local function CreateESP(player)
                 ESP.Objects[player] = nil
             end
             
-            if ESP.Chams[player] then
-                ESP.Chams[player]:Destroy()
-                ESP.Chams[player] = nil
+            if ESP.ChamsInstances[player] then
+                ESP.ChamsInstances[player]:Destroy()
+                ESP.ChamsInstances[player] = nil
             end
             
             if ESP.Boxes3D[player] then
@@ -986,9 +984,9 @@ local function CreateESP(player)
     
     -- Update chams when character changes
     player.CharacterAdded:Connect(function(character)
-        if ESP.Chams[player] then
-            ESP.Chams[player]:Destroy()
-            ESP.Chams[player] = nil
+        if ESP.ChamsInstances[player] then
+            ESP.ChamsInstances[player]:Destroy()
+            ESP.ChamsInstances[player] = nil
         end
         
         task.wait(0.5) -- Wait for character to fully load
@@ -1227,7 +1225,7 @@ function ESP:Init()
     self.HealthBars = false
     self.ArmorBars = false
     self.ArmoredOnly = false
-    self.Chams = false
+    self.ShowChams = false
     self.Tracers = false
     self.BoxType = "2D"
     
@@ -1252,9 +1250,9 @@ function ESP:Init()
             self.Objects[player] = nil
         end
         
-        if self.Chams[player] then
-            self.Chams[player]:Destroy()
-            self.Chams[player] = nil
+        if self.ChamsInstances[player] then
+            self.ChamsInstances[player]:Destroy()
+            self.ChamsInstances[player] = nil
         end
         
         if self.Boxes3D[player] then
@@ -1291,7 +1289,7 @@ function ESP:Init()
             end
             
             -- Hide all chams if disabled
-            for player, highlight in pairs(self.Chams) do
+            for player, highlight in pairs(self.ChamsInstances) do
                 highlight.Enabled = false
             end
             
@@ -1366,7 +1364,7 @@ function ESP:UpdateSettings(settings)
     end
     
     -- Update chams properties
-    for player, highlight in pairs(self.Chams) do
+    for player, highlight in pairs(self.ChamsInstances) do
         highlight.FillColor = self.ChamsVisible
         highlight.OutlineColor = self.ChamsOutlineColor
         highlight.FillTransparency = self.ChamsTransparency
@@ -1419,9 +1417,9 @@ function ESP:RemovePlayer(player)
         self.Objects[player] = nil
     end
     
-    if self.Chams[player] then
-        self.Chams[player]:Destroy()
-        self.Chams[player] = nil
+    if self.ChamsInstances[player] then
+        self.ChamsInstances[player]:Destroy()
+        self.ChamsInstances[player] = nil
     end
     
     if self.Boxes3D[player] then
@@ -1458,7 +1456,7 @@ function ESP:Toggle(enabled)
         end
         
         -- Hide all chams if disabled
-        for _, highlight in pairs(self.Chams) do
+        for _, highlight in pairs(self.ChamsInstances) do
             highlight.Enabled = false
         end
         
@@ -1486,11 +1484,10 @@ end
 
 -- Function to toggle chams
 function ESP:ToggleChams(enabled)
-    self.Chams = enabled
     self.ShowChams = enabled
     
     -- Update all chams
-    for player, highlight in pairs(self.Chams) do
+    for player, highlight in pairs(self.ChamsInstances) do
         highlight.Enabled = enabled and self.Enabled
     end
 end
@@ -1515,7 +1512,7 @@ function ESP:ToggleCornerBoxes(enabled)
         self.BoxType = "corner"
         self.Show3DBoxes = false
     end
-}
+end
 
 -- Function to update chams colors
 function ESP:UpdateChamsColors(visible, occluded, outline)
@@ -1524,7 +1521,7 @@ function ESP:UpdateChamsColors(visible, occluded, outline)
     self.ChamsOutlineColor = outline or self.ChamsOutlineColor
     
     -- Update all chams
-    for player, highlight in pairs(self.Chams) do
+    for player, highlight in pairs(self.ChamsInstances) do
         highlight.FillColor = self.ChamsVisible
         highlight.OutlineColor = self.ChamsOutlineColor
         
