@@ -3000,6 +3000,7 @@ exploits:toggle({name = "gun", flag = "gun_enabled"})
 -- Load ESP module (add this at the beginning of your script)
 local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/lolxd8281989282/sdsdaaswqe213sddz/refs/heads/main/esp.lua"))()
 ESP:Init()
+ESP.Enabled = false -- Make sure ESP is disabled by default
 
 -- visuals tab
 local visuals = window:tab({name = "visuals"})
@@ -3008,39 +3009,57 @@ local visuals = window:tab({name = "visuals"})
 local esp = visuals:section({name = "esp"})
 esp:toggle({name = "box", flag = "esp_box", callback = function(bool)
     ESP.Boxes = bool
+    -- Update ESP.Enabled based on whether any ESP feature is enabled
+    ESP.Enabled = bool or flags.esp_name or flags.esp_weapon or 
+                 flags.esp_distance or flags.esp_healthbar or flags.esp_armor or 
+                 flags.esp_chams or flags.esp_tracer_lines
 end}):colorpicker({name = "Box Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_box_color", callback = function(color)
     ESP.BoxColor = color
 end})
 
 esp:toggle({name = "name", flag = "esp_name", callback = function(bool)
     ESP.Names = bool
+    ESP.Enabled = flags.esp_box or bool or flags.esp_weapon or 
+                 flags.esp_distance or flags.esp_healthbar or flags.esp_armor or 
+                 flags.esp_chams or flags.esp_tracer_lines
 end}):colorpicker({name = "Name Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_name_color", callback = function(color)
     ESP.NameColor = color
 end})
 
 esp:dropdown({name = "box type", flag = "name_type", items = {"2D", "3D", "corner"}, default = "2D", callback = function(selected)
     ESP.BoxType = selected
-    ESP.Boxes = flags.esp_box -- Ensure boxes stay enabled/disabled based on toggle
 end})
 
 esp:toggle({name = "weapon", flag = "esp_weapon", callback = function(bool)
     ESP.Weapons = bool
+    ESP.Enabled = flags.esp_box or flags.esp_name or bool or 
+                 flags.esp_distance or flags.esp_healthbar or flags.esp_armor or 
+                 flags.esp_chams or flags.esp_tracer_lines
 end}):colorpicker({name = "Weapon Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_weapon_color", callback = function(color)
     ESP.WeaponColor = color
 end})
 
 esp:toggle({name = "distance", flag = "esp_distance", callback = function(bool)
     ESP.Distance = bool
+    ESP.Enabled = flags.esp_box or flags.esp_name or flags.esp_weapon or 
+                 bool or flags.esp_healthbar or flags.esp_armor or 
+                 flags.esp_chams or flags.esp_tracer_lines
 end}):colorpicker({name = "Distance Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_distance_color", callback = function(color)
     ESP.DistanceColor = color
 end})
 
 esp:toggle({name = "healthbar", flag = "esp_healthbar", callback = function(bool)
     ESP.HealthBars = bool
+    ESP.Enabled = flags.esp_box or flags.esp_name or flags.esp_weapon or 
+                 flags.esp_distance or bool or flags.esp_armor or 
+                 flags.esp_chams or flags.esp_tracer_lines
 end})
 
 esp:toggle({name = "armor", flag = "esp_armor", callback = function(bool)
     ESP.ArmorBars = bool
+    ESP.Enabled = flags.esp_box or flags.esp_name or flags.esp_weapon or 
+                 flags.esp_distance or flags.esp_healthbar or bool or 
+                 flags.esp_chams or flags.esp_tracer_lines
 end}):colorpicker({name = "Armor Color", color = Color3.fromRGB(0, 170, 255), flag = "esp_armor_color", callback = function(color)
     ESP.ArmorColor = color
 end})
@@ -3051,13 +3070,19 @@ end})
 
 esp:toggle({name = "chams", flag = "esp_chams", callback = function(bool)
     ESP.Chams = bool
+    ESP.Enabled = flags.esp_box or flags.esp_name or flags.esp_weapon or 
+                 flags.esp_distance or flags.esp_healthbar or flags.esp_armor or 
+                 bool or flags.esp_tracer_lines
 end}):colorpicker({name = "Chams Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_chams_color", callback = function(color)
     ESP.ChamsColor = color
 end})
 
 esp:toggle({name = "tracer lines", flag = "esp_tracer_lines", callback = function(bool)
     ESP.Tracers = bool
-end}):colorpicker({name = "Armor Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_tracer_lines_color", callback = function(color)
+    ESP.Enabled = flags.esp_box or flags.esp_name or flags.esp_weapon or 
+                 flags.esp_distance or flags.esp_healthbar or flags.esp_armor or 
+                 flags.esp_chams or bool
+end}):colorpicker({name = "Tracer Lines Color", color = Color3.fromRGB(255, 255, 255), flag = "esp_tracer_lines_color", callback = function(color)
     ESP.TracerColor = color
 end})
 
@@ -3143,36 +3168,6 @@ hit_sounds:dropdown({name = "sound", flag = "hit_sound", items = {"minecraft"}, 
 local shoot = visuals:section({name = "shoot", side = "right"})
 shoot:toggle({name = "disable shoot sound", flag = "disable_shoot"})
 shoot:dropdown({name = "disable type", flag = "shoot_disable_type", items = {"local"}, default = "local"})
-
--- Add this at the end of your script to ensure ESP settings are initialized
-local function InitializeESP()
-    -- Enable ESP
-    ESP.Enabled = true
-    
-    -- Set initial values based on flags
-    ESP.Boxes = flags.esp_box
-    ESP.BoxColor = flags.esp_box_color
-    ESP.Names = flags.esp_name
-    ESP.NameColor = flags.esp_name_color
-    ESP.BoxType = flags.name_type
-    ESP.Weapons = flags.esp_weapon
-    ESP.WeaponColor = flags.esp_weapon_color
-    ESP.Distance = flags.esp_distance
-    ESP.DistanceColor = flags.esp_distance_color
-    ESP.HealthBars = flags.esp_healthbar
-    ESP.ArmorBars = flags.esp_armor
-    ESP.ArmorColor = flags.esp_armor_color
-    ESP.ArmoredOnly = flags.esp_armored_only
-    ESP.Chams = flags.esp_chams
-    ESP.ChamsColor = flags.esp_chams_color
-    ESP.Tracers = flags.esp_tracer_lines
-    ESP.TracerColor = flags.esp_tracer_lines_color
-    ESP.DisableTracers = flags.disable_tracers
-    ESP.TracerType = flags.tracer_type
-end
-
--- Call this after all UI elements are created
-InitializeESP()
 
 -- CHARACTER TAB
 local character = window:tab({name = "character"})
