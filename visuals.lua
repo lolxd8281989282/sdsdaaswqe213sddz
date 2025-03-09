@@ -237,8 +237,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "box" flag and "box type" for box type
-        if flags.box and flags["box type"] == "2D" then
+        -- Using "esp_box" flag and "name_type" for box type
+        if flags.esp_box and flags.name_type == "2D" then
             local corners = GetBoxCorners(player)
             if corners then
                 objects.box.Size = corners.Size
@@ -267,8 +267,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "name" flag
-        if flags.name then
+        -- Using "esp_name" flag
+        if flags.esp_name then
             local corners = GetBoxCorners(player)
             if corners then
                 name.Position = Vector2.new(corners.TopLeft.X + corners.Size.X / 2, corners.TopLeft.Y - 15)
@@ -290,8 +290,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "distance" flag
-        if flags.distance then
+        -- Using "esp_distance" flag
+        if flags.esp_distance then
             local corners = GetBoxCorners(player)
             if corners then
                 local dist = math.floor(GetDistanceFromPlayer(player))
@@ -314,8 +314,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "weapon" flag
-        if flags.weapon then
+        -- Using "esp_weapon" flag
+        if flags.esp_weapon then
             local corners = GetBoxCorners(player)
             if corners then
                 weapon.Position = Vector2.new(corners.BottomLeft.X + corners.Size.X / 2, corners.BottomLeft.Y + 15)
@@ -339,8 +339,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "healthbar" flag
-        if flags.healthbar then
+        -- Using "esp_healthbar" flag
+        if flags.esp_healthbar then
             local corners = GetBoxCorners(player)
             if corners then
                 local currentHealth, maxHealth = GetPlayerHealth(player)
@@ -384,8 +384,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "armor" and "armored only" flags
-        if flags.armor and (not flags["armored only"] or IsPlayerArmored(player)) then
+        -- Using "esp_armor" and "esp_armored_only" flags
+        if flags.esp_armor and (not flags.esp_armored_only or IsPlayerArmored(player)) then
             local corners = GetBoxCorners(player)
             if corners then
                 local armorValue = GetPlayerArmor(player)
@@ -427,8 +427,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "tracer lines" flag
-        if flags["tracer lines"] then
+        -- Using "esp_tracer_lines" flag and "disable_tracers" flag
+        if flags.esp_tracer_lines and not flags.disable_tracers then
             local rootPart = player.Character.HumanoidRootPart
             local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
             
@@ -456,8 +456,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "box" flag and "box type" for box type
-        if flags.box and flags["box type"] == "corner" then
+        -- Using "esp_box" flag and "name_type" for box type
+        if flags.esp_box and flags.name_type == "corner" then
             local boxCorners = GetBoxCorners(player)
             if boxCorners then
                 local cornerSize = boxCorners.Size.Y * 0.2
@@ -513,8 +513,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "box" flag and "box type" for box type
-        if flags.box and flags["box type"] == "3D" then
+        -- Using "esp_box" flag and "name_type" for box type
+        if flags.esp_box and flags.name_type == "3D" then
             local rootPart = player.Character.HumanoidRootPart
             local size = Vector3.new(4, 5, 4)
             local cf = rootPart.CFrame
@@ -575,8 +575,8 @@ RunService.RenderStepped:Connect(function()
             continue
         end
         
-        -- Using "chams" flag
-        if flags.chams then
+        -- Using "esp_chams" flag
+        if flags.esp_chams then
             chams.highlight.Enabled = true
             chams.highlight.FillColor = flags.esp_chams_color
             chams.highlight.OutlineColor = flags.esp_chams_color
